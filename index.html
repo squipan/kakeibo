@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#857ECF">
+<meta name="theme-color" content="#76947D">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="家計簿">
@@ -21,18 +21,18 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F5F4F9;--bg2:#ECEAF2;--white:#FFFFFF;
-  --accent1:#857ECF;--accent2:#9B96CD;--accent3:#C1BEE4;
-  --pink:#EAA0B0;--pink-bg:#FDF0F3;--pink-text:#BD5C75;
-  --text1:#292735;--text2:#5E5B6E;--text3:#9995AC;
-  --border:rgba(133,126,207,0.12);--border2:rgba(133,126,207,0.22);
-  --shadow:0 4px 20px rgba(133,126,207,0.06);
-  --shadow2:0 8px 30px rgba(133,126,207,0.12);
+  --bg:#F4F6F4;--bg2:#E6EAE6;--white:#FFFFFF;
+  --accent1:#76947D;--accent2:#93A897;--accent3:#BAC8BE;
+  --pink:#DFABA1;--pink-bg:#FDF4F2;--pink-text:#A76558;
+  --text1:#243026;--text2:#4E5E51;--text3:#88978B;
+  --border:rgba(118,148,125,0.12);--border2:rgba(118,148,125,0.22);
+  --shadow:0 4px 20px rgba(118,148,125,0.06);
+  --shadow2:0 8px 30px rgba(118,148,125,0.12);
   --r:14px;--r2:10px;--nav-h:72px
 }
-html,body{height:100%;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text1);font-size:14px;-webkit-font-smoothing:antialiased}
-#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
-.main-scroll{flex:1;overflow-y:auto;padding:0 0 calc(var(--nav-h) + 16px)}
+html,body{height:100%;width:100%;overflow-x:hidden;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text1);font-size:14px;-webkit-font-smoothing:antialiased}
+#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;overflow-x:hidden;width:100%}
+.main-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 calc(var(--nav-h) + 16px)}
 
 /* INSTALL BANNER */
 #install-banner{display:none;position:sticky;top:0;z-index:200;background:var(--accent1);color:#fff;padding:10px 16px;font-size:12px;align-items:center;gap:10px}
