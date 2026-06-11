@@ -725,9 +725,7 @@ function renderOursYearBar() {
 }
 
 // ─── OURS TABLE ──────────────────────────────────────────────
-function loadOursYear(yr) {
-  activeOursYear = yr;
-  ensureYear(yr);
+function initOursTable() {
   const tbody = document.getElementById('ours-body');
   tbody.innerHTML = '';
   MONTHS.forEach((m, mi) => {
@@ -741,13 +739,14 @@ function loadOursYear(yr) {
       inp.type      = 'text';
       inp.className = 'cell-input';
       inp.placeholder = '¥';
-      const stored = oursData[yr][mi][col];
-      inp.value = stored ? fmtInput(parseNum(stored)) : '';
+      inp.dataset.mi  = mi;
+      inp.dataset.col = col;
       inp.addEventListener('focus', function() {
         this.value = this.value.replace(/[¥,]/g,'');
       });
       inp.addEventListener('blur', function() {
         const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
+        const yr = activeOursYear;
         oursData[yr][mi][col] = n || '';
         this.value = n ? fmtInput(n) : '';
         updateOursTotals(yr);
@@ -760,16 +759,38 @@ function loadOursYear(yr) {
     const tdT = document.createElement('td');
     tdT.className = 'row-total';
     tdT.id = 'rt-' + mi;
-    const rowSum = calculateRowNet(oursData[yr][mi]);
-    const hasAnyInput = COLS.some(col => oursData[yr][mi][col] !== '');
-    tdT.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
+    tdT.textContent = '—';
     tr.appendChild(tdT);
     tbody.appendChild(tr);
   });
+}
+
+function loadOursYear(yr) {
+  activeOursYear = yr;
+  ensureYear(yr);
+
+  const inputs = document.querySelectorAll('#ours-body .cell-input');
+  inputs.forEach(inp => {
+    const mi = inp.dataset.mi;
+    const col = inp.dataset.col;
+    const stored = oursData[yr][mi][col];
+    const targetVal = stored ? fmtInput(parseNum(stored)) : '';
+    if (document.activeElement !== inp && inp.value !== targetVal) {
+      inp.value = targetVal;
+    }
+  });
 
   const b = balances[yr];
-  document.getElementById('rakuten-bal').value = b.rakuten ? fmtInput(parseNum(b.rakuten)) : '';
-  document.getElementById('wallet-bal').value  = b.wallet  ? fmtInput(parseNum(b.wallet))  : '';
+  const rakutenBal = document.getElementById('rakuten-bal');
+  const walletBal = document.getElementById('wallet-bal');
+  const targetRakuten = b.rakuten ? fmtInput(parseNum(b.rakuten)) : '';
+  if (document.activeElement !== rakutenBal && rakutenBal.value !== targetRakuten) {
+    rakutenBal.value = targetRakuten;
+  }
+  const targetWallet = b.wallet ? fmtInput(parseNum(b.wallet)) : '';
+  if (document.activeElement !== walletBal && walletBal.value !== targetWallet) {
+    walletBal.value = targetWallet;
+  }
 
   updateOursTotals(yr);
   updateHome();
@@ -1012,6 +1033,7 @@ function switchPage(id, btn) {
   }
   if (!years.includes(activeOursYear))   activeOursYear   = years[years.length - 1];
   if (!years.includes(activeSettleYear)) activeSettleYear = years[years.length - 1];
+  initOursTable();
   renderOursYearBar();
   renderSettleYearBar();
   loadOursYear(activeOursYear);
