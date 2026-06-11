@@ -205,6 +205,41 @@ table.ledger-tbl tr:hover td{background:rgba(133,126,207,0.025)}
 .topbar-right{display:flex;align-items:center;gap:8px}
 .signout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:inherit;padding:4px 8px;border-radius:8px;transition:color 0.15s,background 0.15s}
 .signout-btn:hover{color:var(--accent1);background:var(--bg2)}
+
+/* MONTH CARD FORM */
+.ours-month-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+.month-card-header{padding:16px 20px;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:space-between}
+.month-card-title{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.month-card-net{font-size:20px;font-weight:600}
+.month-card-body{padding:16px 20px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-group{background:var(--bg);border-radius:var(--r2);padding:10px 14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:3px;transition:border-color 0.15s,background-color 0.15s}
+.field-group:focus-within{border-color:var(--accent2);background:var(--white);box-shadow:0 0 0 3px rgba(118,148,125,0.08)}
+.field-group.full-width{grid-column:span 2}
+.field-group label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.card-input{background:transparent;border:none;outline:none;font-size:16px;font-weight:600;color:var(--text1);font-family:inherit;width:100%;text-align:right}
+.input-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:8px 0 6px}
+
+/* MONTH TAB BAR */
+.month-bar-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px 14px;padding:0 16px}
+.month-bar-wrap::-webkit-scrollbar{display:none}
+.month-bar{display:flex;gap:6px;width:max-content;padding-bottom:2px}
+.month-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--white);color:var(--text2);transition:all 0.18s;white-space:nowrap;font-family:inherit}
+.month-tab.active{background:var(--accent1);color:#fff;border-color:var(--accent1)}
+
+/* ANNUAL SUMMARY */
+.annual-summary-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.summary-header-row{display:flex;justify-content:space-between;padding:10px 16px;background:var(--bg2);color:var(--text2);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.summary-body{display:flex;flex-direction:column}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;transition:background 0.15s}
+.summary-row:last-child{border-bottom:none}
+.summary-row:hover{background:var(--bg)}
+.summary-row.active{background:rgba(118,148,125,0.06)}
+.summary-row.active .summary-month{color:var(--accent1);font-weight:600}
+.summary-month{font-weight:500;color:var(--text2)}
+.summary-val{font-weight:600;color:var(--accent1)}
+.summary-val.negative{color:var(--pink-text)}
+.summary-footer-row{display:flex;justify-content:space-between;padding:12px 16px;background:var(--bg2);color:var(--accent1);font-weight:600;font-size:14px;border-top:1.5px solid var(--border2)}
 </style>
 </head>
 <body>
@@ -296,27 +331,76 @@ table.ledger-tbl tr:hover td{background:rgba(133,126,207,0.025)}
         <div class="year-bar" id="ours-year-bar"></div>
       </div>
 
-      <div class="scroll-hint">← スクロール →</div>
-      <div class="table-wrap">
-        <table class="sheet" id="ours-sheet">
-          <thead>
-            <tr>
-              <th>月</th>
-              <th>Dane</th>
-              <th>Shizu</th>
-              <th>電気</th>
-              <th>水道</th>
-              <th>インターネット</th>
-              <th>食費</th>
-              <th>日用品・その他</th>
-              <th>車検・自動車税・イヴ</th>
-              <th>楽天クレジット</th>
-              <th>合計</th>
-            </tr>
-          </thead>
-          <tbody id="ours-body"></tbody>
-          <tfoot><tr class="total-row" id="ours-totals"></tr></tfoot>
-        </table>
+      <!-- MONTH TAB BAR -->
+      <div class="month-bar-wrap">
+        <div class="month-bar" id="ours-month-bar"></div>
+      </div>
+
+      <!-- MONTH CARD FORM -->
+      <div class="ours-month-card">
+        <div class="month-card-header">
+          <div class="month-card-title" id="ours-month-title">—</div>
+          <div class="month-card-net" id="ours-month-net">—</div>
+        </div>
+        <div class="month-card-body">
+          <div class="input-section-title">収入 Income</div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label for="inp-dane">Dane</label>
+              <input type="text" class="card-input" id="inp-dane" placeholder="¥0">
+            </div>
+            <div class="field-group">
+              <label for="inp-shizu">Shizu</label>
+              <input type="text" class="card-input" id="inp-shizu" placeholder="¥0">
+            </div>
+          </div>
+          
+          <div class="input-section-title" style="margin-top:16px">支出 Expenses</div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label for="inp-elec">電気</label>
+              <input type="text" class="card-input" id="inp-elec" placeholder="¥0">
+            </div>
+            <div class="field-group">
+              <label for="inp-water">水道</label>
+              <input type="text" class="card-input" id="inp-water" placeholder="¥0">
+            </div>
+            <div class="field-group">
+              <label for="inp-net">インターネット</label>
+              <input type="text" class="card-input" id="inp-net" placeholder="¥0">
+            </div>
+            <div class="field-group">
+              <label for="inp-food">食費</label>
+              <input type="text" class="card-input" id="inp-food" placeholder="¥0">
+            </div>
+            <div class="field-group">
+              <label for="inp-misc">その他</label>
+              <input type="text" class="card-input" id="inp-misc" placeholder="¥0">
+            </div>
+            <div class="field-group">
+              <label for="inp-car">車検イヴ</label>
+              <input type="text" class="card-input" id="inp-car" placeholder="¥0">
+            </div>
+          </div>
+          <div class="field-group full-width" style="margin-top:10px">
+            <label for="inp-rakuten">楽天クレジット</label>
+            <input type="text" class="card-input" id="inp-rakuten" placeholder="¥0">
+          </div>
+        </div>
+      </div>
+
+      <!-- ANNUAL SUMMARY -->
+      <div class="sec-label">年間サマリー Annual Summary</div>
+      <div class="annual-summary-card">
+        <div class="summary-header-row">
+          <div>月</div>
+          <div>収支合計</div>
+        </div>
+        <div class="summary-body" id="annual-summary-list"></div>
+        <div class="summary-footer-row" id="annual-summary-footer">
+          <div>合計</div>
+          <div id="annual-summary-grand">—</div>
+        </div>
       </div>
 
       <div class="balance-row">
@@ -466,6 +550,7 @@ let ledgers  = {};
 let _id      = 1;
 
 let activeOursYear   = CURRENT_YEAR;
+let activeOursMonth  = new Date().getMonth();
 let activeSettleYear = CURRENT_YEAR;
 
 // ─── PWA: SERVICE WORKER ─────────────────────────────────────
@@ -725,58 +810,100 @@ function renderOursYearBar() {
 }
 
 // ─── OURS TABLE ──────────────────────────────────────────────
-function initOursTable() {
-  const tbody = document.getElementById('ours-body');
-  tbody.innerHTML = '';
-  MONTHS.forEach((m, mi) => {
-    const tr = document.createElement('tr');
-    const tdM = document.createElement('td');
-    tdM.textContent = m;
-    tr.appendChild(tdM);
-    COLS.forEach(col => {
-      const td  = document.createElement('td');
-      const inp = document.createElement('input');
-      inp.type      = 'text';
-      inp.className = 'cell-input';
-      inp.placeholder = '¥';
-      inp.dataset.mi  = mi;
-      inp.dataset.col = col;
-      inp.addEventListener('focus', function() {
-        this.value = this.value.replace(/[¥,]/g,'');
-      });
-      inp.addEventListener('blur', function() {
-        const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
-        const yr = activeOursYear;
-        oursData[yr][mi][col] = n || '';
-        this.value = n ? fmtInput(n) : '';
-        updateOursTotals(yr);
-        updateHome();
-        save();
-      });
-      td.appendChild(inp);
-      tr.appendChild(td);
+function initOursFormListeners() {
+  const fields = {
+    'inp-dane': 'dane',
+    'inp-shizu': 'shizu',
+    'inp-elec': 'elec',
+    'inp-water': 'water',
+    'inp-net': 'net',
+    'inp-food': 'food',
+    'inp-misc': 'misc',
+    'inp-car': 'car',
+    'inp-rakuten': 'rakuten'
+  };
+
+  Object.entries(fields).forEach(([id, key]) => {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+
+    inp.addEventListener('focus', function() {
+      this.value = this.value.replace(/[¥,]/g,'');
     });
-    const tdT = document.createElement('td');
-    tdT.className = 'row-total';
-    tdT.id = 'rt-' + mi;
-    tdT.textContent = '—';
-    tr.appendChild(tdT);
-    tbody.appendChild(tr);
+
+    inp.addEventListener('blur', function() {
+      const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
+      const yr = activeOursYear;
+      const mi = activeOursMonth;
+      oursData[yr][mi][key] = n || '';
+      this.value = n ? fmtInput(n) : '';
+      updateOursTotals(yr);
+      updateHome();
+      save();
+    });
   });
+}
+
+function renderOursMonthBar() {
+  const bar = document.getElementById('ours-month-bar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  MONTHS.forEach((m, mi) => {
+    const tab = document.createElement('div');
+    tab.className = 'month-tab' + (activeOursMonth === mi ? ' active' : '');
+    tab.textContent = m;
+    tab.onclick = () => {
+      selectOursMonth(mi);
+    };
+    bar.appendChild(tab);
+  });
+  
+  setTimeout(() => {
+    const active = bar.querySelector('.month-tab.active');
+    if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  }, 50);
+}
+
+function selectOursMonth(mi) {
+  activeOursMonth = mi;
+  renderOursMonthBar();
+  loadOursYear(activeOursYear);
+}
+
+function initOursPage() {
+  initOursFormListeners();
+  renderOursMonthBar();
 }
 
 function loadOursYear(yr) {
   activeOursYear = yr;
   ensureYear(yr);
+  
+  const monthTitle = document.getElementById('ours-month-title');
+  if (monthTitle) monthTitle.textContent = `${activeOursYear}年 ${MONTHS[activeOursMonth]} 収支`;
 
-  const inputs = document.querySelectorAll('#ours-body .cell-input');
-  inputs.forEach(inp => {
-    const mi = inp.dataset.mi;
-    const col = inp.dataset.col;
-    const stored = oursData[yr][mi][col];
-    const targetVal = stored ? fmtInput(parseNum(stored)) : '';
-    if (document.activeElement !== inp && inp.value !== targetVal) {
-      inp.value = targetVal;
+  const d = oursData[yr][activeOursMonth];
+  
+  const fields = {
+    'inp-dane': 'dane',
+    'inp-shizu': 'shizu',
+    'inp-elec': 'elec',
+    'inp-water': 'water',
+    'inp-net': 'net',
+    'inp-food': 'food',
+    'inp-misc': 'misc',
+    'inp-car': 'car',
+    'inp-rakuten': 'rakuten'
+  };
+
+  Object.entries(fields).forEach(([id, key]) => {
+    const inp = document.getElementById(id);
+    if (inp) {
+      const stored = d[key];
+      const targetVal = stored ? fmtInput(parseNum(stored)) : '';
+      if (document.activeElement !== inp && inp.value !== targetVal) {
+        inp.value = targetVal;
+      }
     }
   });
 
@@ -799,43 +926,65 @@ function loadOursYear(yr) {
 function updateOursTotals(yr) {
   ensureYear(yr);
   const colTotals = Object.fromEntries(COLS.map(c => [c,0]));
+  
+  const summaryList = document.getElementById('annual-summary-list');
+  if (summaryList) summaryList.innerHTML = '';
+  
   MONTHS.forEach((m, mi) => {
     const rowData = oursData[yr][mi];
     const rowSum = calculateRowNet(rowData);
+    
     COLS.forEach(col => {
       colTotals[col] += parseNum(rowData[col]);
     });
-    const cell = document.getElementById('rt-' + mi);
-    const hasAnyInput = COLS.some(col => rowData[col] !== '');
-    if (cell) cell.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
+
+    if (mi === activeOursMonth) {
+      const netBadge = document.getElementById('ours-month-net');
+      if (netBadge) {
+        const hasAnyInput = COLS.some(col => rowData[col] !== '');
+        netBadge.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
+      }
+    }
+
+    if (summaryList) {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'summary-row' + (mi === activeOursMonth ? ' active' : '');
+      rowDiv.onclick = () => selectOursMonth(mi);
+      
+      const monthLabel = document.createElement('div');
+      monthLabel.className = 'summary-month';
+      monthLabel.textContent = m;
+      
+      const valDiv = document.createElement('div');
+      valDiv.className = 'summary-val' + (rowSum < 0 ? ' negative' : '');
+      const hasAnyInput = COLS.some(col => rowData[col] !== '');
+      valDiv.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
+      
+      rowDiv.appendChild(monthLabel);
+      rowDiv.appendChild(valDiv);
+      summaryList.appendChild(rowDiv);
+    }
   });
-  const tfoot = document.getElementById('ours-totals');
-  tfoot.innerHTML = '';
-  const labelTd = document.createElement('td');
-  labelTd.textContent = '合計';
-  tfoot.appendChild(labelTd);
-  COLS.forEach(col => {
-    const td = document.createElement('td');
-    let hasAnyColInput = false;
+
+  const yearGrand = colTotals['dane'] + colTotals['shizu']
+                  - colTotals['elec'] - colTotals['water']
+                  - colTotals['net'] - colTotals['food']
+                  - colTotals['misc'] - colTotals['car']
+                  - colTotals['rakuten'];
+
+  const grandLabel = document.getElementById('annual-summary-grand');
+  if (grandLabel) {
+    let hasAnyInputInYear = false;
     MONTHS.forEach((m, mi) => {
-      if (oursData[yr][mi][col] !== '') hasAnyColInput = true;
+      if (COLS.some(col => oursData[yr][mi][col] !== '')) hasAnyInputInYear = true;
     });
-    td.textContent = hasAnyColInput ? fmtYen(colTotals[col]) : '—';
-    tfoot.appendChild(td);
-  });
-  const grand = colTotals['dane'] + colTotals['shizu']
-              - colTotals['elec'] - colTotals['water']
-              - colTotals['net'] - colTotals['food']
-              - colTotals['misc'] - colTotals['car']
-              - colTotals['rakuten'];
-  const tdG = document.createElement('td');
-  tdG.className = 'row-total';
-  let hasAnyInputInYear = false;
-  MONTHS.forEach((m, mi) => {
-    if (COLS.some(col => oursData[yr][mi][col] !== '')) hasAnyInputInYear = true;
-  });
-  tdG.textContent = hasAnyInputInYear ? fmtYen(grand) : '—';
-  tfoot.appendChild(tdG);
+    grandLabel.textContent = hasAnyInputInYear ? fmtYen(yearGrand) : '—';
+    if (yearGrand < 0) {
+      grandLabel.style.color = 'var(--pink-text)';
+    } else {
+      grandLabel.style.color = 'var(--accent1)';
+    }
+  }
 }
 
 function onBalanceInput() {
@@ -1033,7 +1182,7 @@ function switchPage(id, btn) {
   }
   if (!years.includes(activeOursYear))   activeOursYear   = years[years.length - 1];
   if (!years.includes(activeSettleYear)) activeSettleYear = years[years.length - 1];
-  initOursTable();
+  initOursPage();
   renderOursYearBar();
   renderSettleYearBar();
   loadOursYear(activeOursYear);

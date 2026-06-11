@@ -1,6 +1,6 @@
 // 家計簿 Service Worker — v2
 // Deployed at: https://squipan.github.io/kakeibo/
-const CACHE = 'kakebo-v7';
+const CACHE = 'kakebo-v8';
 const BASE  = '/kakeibo/';
 const ASSETS = [
   BASE,
