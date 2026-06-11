@@ -14,6 +14,10 @@
 <title>家計簿 — Household Finance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -172,10 +176,44 @@ table.ledger-tbl tr:hover td{background:rgba(98,41,238,0.025)}
 .page-title{padding:16px 0 4px}
 .page-title h2{font-size:22px;font-weight:300;color:var(--text1);letter-spacing:-0.02em}
 .page-title p{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* SIGN-IN OVERLAY */
+#signin-overlay{position:fixed;inset:0;z-index:2000;background:linear-gradient(135deg,#F7EEF8 0%,#EDE4F5 50%,#D4C0FF 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.signin-card{background:#fff;border-radius:24px;padding:40px 28px;text-align:center;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(98,41,238,0.18)}
+.signin-icon{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#6229EE,#9267FE);display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 20px}
+.signin-title{font-size:28px;font-weight:300;color:var(--text1);letter-spacing:-0.02em;margin-bottom:6px}
+.signin-sub{font-size:12px;color:var(--text3);margin-bottom:32px;line-height:1.6}
+.signin-google-btn{width:100%;padding:14px;border:1.5px solid var(--border2);border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;color:var(--text1);font-family:inherit;transition:background 0.18s,box-shadow 0.18s}
+.signin-google-btn:hover{background:var(--bg);box-shadow:var(--shadow2)}
+.signin-google-btn svg{width:20px;height:20px;flex-shrink:0}
+.signin-note{font-size:11px;color:var(--text3);margin-top:20px;line-height:1.5}
+
+/* SYNC STATUS */
+.sync-pill{font-size:10px;font-weight:600;letter-spacing:0.04em;padding:4px 10px;border-radius:20px;transition:all 0.3s;white-space:nowrap}
+.sync-ok{background:rgba(34,197,94,0.12);color:#16a34a}
+.sync-pending{background:rgba(234,179,8,0.15);color:#b45309}
+.sync-offline{background:rgba(156,163,175,0.2);color:var(--text3)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.signout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:inherit;padding:4px 8px;border-radius:8px;transition:color 0.15s,background 0.15s}
+.signout-btn:hover{color:var(--accent1);background:var(--bg2)}
 </style>
 </head>
 <body>
 <div id="offline-pill">オフライン Offline</div>
+
+<!-- SIGN-IN OVERLAY -->
+<div id="signin-overlay">
+  <div class="signin-card">
+    <div class="signin-icon">家</div>
+    <h1 class="signin-title">家計簿</h1>
+    <p class="signin-sub">Household Finance<br>Dane &amp; Shizu</p>
+    <button class="signin-google-btn" onclick="signIn()">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.3 0-9.7-3-11.3-7.5L6 33.8C9.4 39.7 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.7 35.8 44 30.3 44 24c0-1.3-.2-2.7-.4-4z"/></svg>
+      Googleでサインイン
+    </button>
+    <p class="signin-note">🔒 家族専用アプリ · データはリアルタイムで同期されます</p>
+  </div>
+</div>
 
 <div id="install-banner">
   <span>📲 ホーム画面に追加してオフラインで使えます</span>
@@ -183,16 +221,20 @@ table.ledger-tbl tr:hover td{background:rgba(98,41,238,0.025)}
   <button class="dismiss" id="dismiss-btn" aria-label="閉じる">✕</button>
 </div>
 
-<div id="app">
+<div id="app" style="display:none">
 
   <div class="topbar">
     <div>
       <div class="topbar-logo">家計簿</div>
       <div class="topbar-sub">Household Finance</div>
     </div>
-    <div class="avatars">
-      <div class="av av-d" title="Dane">D</div>
-      <div class="av av-s" title="Shizu">S</div>
+    <div class="topbar-right">
+      <span id="sync-status" class="sync-pill sync-offline">⏳ 接続中</span>
+      <div class="avatars">
+        <div class="av av-d" title="Dane">D</div>
+        <div class="av av-s" title="Shizu">S</div>
+      </div>
+      <button class="signout-btn" onclick="signOut()" title="Sign out">↩</button>
     </div>
   </div>
 
@@ -377,6 +419,22 @@ table.ledger-tbl tr:hover td{background:rgba(98,41,238,0.025)}
 </div>
 
 <script>
+// ─── FIREBASE CONFIG ─────────────────────────────────────────
+// 👇 Replace with YOUR Firebase project config
+const FIREBASE_CONFIG = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+const DOC  = db.collection('kakeibo').doc('shared');
+
 // ─── CONSTANTS ───────────────────────────────────────────────
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const COLS   = ['dane','shizu','elec','water','net','food','misc','car','rakuten'];
@@ -400,6 +458,81 @@ if ('serviceWorker' in navigator) {
       .then(reg => console.log('SW registered:', reg.scope))
       .catch(err => console.warn('SW registration failed:', err));
   });
+}
+
+// ─── FIREBASE AUTH ────────────────────────────────────────────
+let currentUser = null;
+let userIsEditing = false;
+let saveTimer = null;
+let unsubFirestore = null;
+
+document.addEventListener('focusin',  () => { userIsEditing = true; });
+document.addEventListener('focusout', () => { setTimeout(() => { userIsEditing = false; }, 300); });
+
+function signIn() {
+  const p = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(p).catch(err => alert('サインイン失敗: ' + err.message));
+}
+function signOut() {
+  if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('signin-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    subscribeToData();
+  } else {
+    document.getElementById('signin-overlay').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
+  }
+});
+
+// ─── FIRESTORE SYNC ───────────────────────────────────────────
+function subscribeToData() {
+  if (unsubFirestore) unsubFirestore();
+  unsubFirestore = DOC.onSnapshot({ includeMetadataChanges: true }, snap => {
+    if (!snap.exists) { init(); return; }
+    const d = snap.data();
+    if (d.years)    years    = d.years;
+    if (d.oursData) oursData = d.oursData;
+    if (d.balances) balances = d.balances;
+    if (d.ledgers)  ledgers  = d.ledgers;
+    if (d._id)      _id      = d._id;
+    // Mirror to localStorage for offline fallback
+    try {
+      localStorage.setItem('kk2_years',    JSON.stringify(years));
+      localStorage.setItem('kk2_ours',     JSON.stringify(oursData));
+      localStorage.setItem('kk2_balances', JSON.stringify(balances));
+      localStorage.setItem('kk2_ledgers',  JSON.stringify(ledgers));
+      localStorage.setItem('kk2_id',       String(_id));
+    } catch(e) {}
+    // Only re-render on confirmed server writes from the OTHER device
+    if (!snap.metadata.hasPendingWrites && !userIsEditing) refreshUI();
+    updateSyncPill(snap.metadata.hasPendingWrites, snap.metadata.fromCache);
+  }, err => console.error('Firestore:', err));
+}
+
+function refreshUI() {
+  if (!years.length) for (let y = START_YEAR; y <= CURRENT_YEAR; y++) ensureYear(y);
+  if (!years.includes(activeOursYear))   activeOursYear   = years[years.length - 1];
+  if (!years.includes(activeSettleYear)) activeSettleYear = years[years.length - 1];
+  renderOursYearBar();
+  renderSettleYearBar();
+  loadOursYear(activeOursYear);
+  loadSettleYear(activeSettleYear);
+  updateHome();
+}
+
+function updateSyncPill(hasPending, fromCache) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (hasPending)       { el.textContent = '⏳ 同期中'; el.className = 'sync-pill sync-pending'; }
+  else if (fromCache)   { el.textContent = '📴 オフライン'; el.className = 'sync-pill sync-offline'; }
+  else                  { el.textContent = '✓ 同期済';  el.className = 'sync-pill sync-ok'; }
 }
 
 // ─── PWA: INSTALL PROMPT ─────────────────────────────────────
@@ -442,6 +575,7 @@ updateOnlineStatus();
 
 // ─── PERSISTENCE ─────────────────────────────────────────────
 function save() {
+  // localStorage: instant local write (offline fallback)
   try {
     localStorage.setItem('kk2_years',    JSON.stringify(years));
     localStorage.setItem('kk2_ours',     JSON.stringify(oursData));
@@ -449,9 +583,17 @@ function save() {
     localStorage.setItem('kk2_ledgers',  JSON.stringify(ledgers));
     localStorage.setItem('kk2_id',       String(_id));
   } catch(e) {}
+  // Firestore: debounced write (syncs to other devices)
+  if (!currentUser) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    DOC.set({ years, oursData, balances, ledgers, _id })
+       .catch(err => console.error('Save error:', err));
+  }, 600);
 }
 
 function loadStorage() {
+  // Only reads from localStorage (Firestore loaded via subscribeToData)
   try {
     const y = localStorage.getItem('kk2_years');
     const o = localStorage.getItem('kk2_ours');
