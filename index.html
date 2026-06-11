@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6229EE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="家計簿">
+<meta name="description" content="Shared household budget tracker">
+<link rel="manifest" href="manifest.json">
+<!-- Apple touch icon (inline SVG data URI) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%236229EE'/%3E%3Ctext x='90' y='125' font-size='95' text-anchor='middle' fill='white' font-family='serif'%3E家%3C/text%3E%3C/svg%3E">
+<title>家計簿 — Household Finance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7EEF8;--bg2:#EDE4F5;--white:#FFFFFF;
+  --accent1:#6229EE;--accent2:#9267FE;--accent3:#C4A8FF;
+  --pink:#F2A7C3;--pink-bg:#FCE5EE;
+  --text1:#161926;--text2:#5A5870;--text3:#9896B0;
+  --border:rgba(98,41,238,0.10);--border2:rgba(98,41,238,0.18);
+  --shadow:0 2px 16px rgba(98,41,238,0.08);
+  --shadow2:0 4px 24px rgba(98,41,238,0.13);
+  --r:14px;--r2:10px;--nav-h:72px
+}
+html,body{height:100%;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text1);font-size:14px;-webkit-font-smoothing:antialiased}
+#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+.main-scroll{flex:1;overflow-y:auto;padding:0 0 calc(var(--nav-h) + 16px)}
+
+/* INSTALL BANNER */
+#install-banner{display:none;position:sticky;top:0;z-index:200;background:var(--accent1);color:#fff;padding:10px 16px;font-size:12px;align-items:center;gap:10px}
+#install-banner.show{display:flex}
+#install-banner span{flex:1}
+#install-banner button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap}
+#install-banner button.dismiss{background:none;border:none;font-size:16px;padding:4px 6px;opacity:0.7}
+
+/* TOPBAR */
+.topbar{padding:18px 20px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:50}
+.topbar-logo{font-size:18px;font-weight:600;color:var(--accent1);letter-spacing:-0.02em}
+.topbar-sub{font-size:11px;color:var(--text3)}
+.avatars{display:flex;gap:6px}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--white);box-shadow:var(--shadow)}
+.av-d{background:linear-gradient(135deg,#9267FE,#6229EE);color:#fff}
+.av-s{background:linear-gradient(135deg,#F2A7C3,#E07BAA);color:#fff}
+
+/* OFFLINE PILL */
+#offline-pill{display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#161926;color:#fff;font-size:11px;padding:5px 14px;border-radius:20px;z-index:300;box-shadow:var(--shadow2)}
+body.offline #offline-pill{display:block}
+
+/* BOTTOM NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:rgba(255,255,255,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding:0 8px 8px}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;padding:8px 18px;border-radius:12px;transition:color 0.2s;font-family:inherit}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn.active{color:var(--accent1)}
+.nav-btn.active svg{stroke:var(--accent1)}
+
+/* PAGES */
+.page{display:none;padding:0 16px 8px}
+.page.active{display:block}
+
+/* YEAR TAB BAR */
+.year-bar-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px 14px;padding:0 16px}
+.year-bar-wrap::-webkit-scrollbar{display:none}
+.year-bar{display:flex;gap:6px;width:max-content;padding-bottom:2px}
+.year-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--white);color:var(--text2);transition:all 0.18s;white-space:nowrap;font-family:inherit}
+.year-tab.active{background:var(--accent1);color:#fff;border-color:var(--accent1)}
+.year-tab.add-btn{background:var(--bg2);color:var(--accent1);border-color:var(--border2);font-size:15px;padding:5px 12px}
+.year-tab.add-btn:hover{background:var(--accent1);color:#fff}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--accent1) 0%,var(--accent2) 60%,var(--pink) 100%);border-radius:var(--r);padding:24px 22px;margin:0 0 16px;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.08)}
+.hero::after{content:'';position:absolute;bottom:-20px;right:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05)}
+.hero-label{font-size:11px;opacity:0.75;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
+.hero-amount{font-size:36px;font-weight:300;letter-spacing:-0.03em;line-height:1.1}
+.hero-amount span{font-size:18px;font-weight:400;opacity:0.8}
+.hero-row{display:flex;gap:20px;margin-top:18px}
+.hero-stat-label{font-size:10px;opacity:0.65;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
+.hero-stat-val{font-size:15px;font-weight:500}
+
+/* CARDS */
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.cards3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.scard{background:var(--white);border-radius:var(--r2);padding:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.scard-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.scard-val{font-size:18px;font-weight:500;color:var(--text1);letter-spacing:-0.02em}
+.scard-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.scard.accent{background:linear-gradient(135deg,var(--accent1),var(--accent2));border-color:transparent}
+.scard.accent .scard-label,.scard.accent .scard-val,.scard.accent .scard-sub{color:#fff}
+.scard.accent .scard-label{opacity:0.75}
+.scard.pink{background:var(--pink-bg);border-color:rgba(242,167,195,0.3)}
+.scard.pink .scard-val{color:#C0457A}
+
+/* SEC LABEL */
+.sec-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin:18px 0 10px}
+
+/* SCROLL HINT */
+.scroll-hint{font-size:10px;color:var(--text3);text-align:right;margin-bottom:4px;letter-spacing:0.04em}
+
+/* SPREADSHEET TABLE */
+.table-wrap{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);overflow-x:auto;margin-bottom:14px;-webkit-overflow-scrolling:touch}
+table.sheet{border-collapse:collapse;width:100%;min-width:820px;font-size:12px}
+table.sheet th{background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);color:var(--text2);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;padding:10px;text-align:center;border-bottom:1.5px solid var(--border2);border-right:1px solid var(--border);white-space:nowrap}
+table.sheet th:first-child{text-align:left;padding-left:14px;min-width:52px}
+table.sheet th:last-child{border-right:none}
+table.sheet td{padding:5px 4px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;vertical-align:middle}
+table.sheet td:first-child{text-align:left;padding-left:14px;font-weight:600;color:var(--accent1);font-size:12px;white-space:nowrap;background:linear-gradient(90deg,rgba(98,41,238,0.04),transparent);position:sticky;left:0;z-index:1;min-width:52px}
+table.sheet td:last-child{border-right:none}
+table.sheet tr:last-child td{border-bottom:none}
+table.sheet tr:hover td{background:rgba(98,41,238,0.025)}
+table.sheet tr:hover td:first-child{background:linear-gradient(90deg,rgba(98,41,238,0.07),rgba(98,41,238,0.025))}
+table.sheet tr.total-row td{background:linear-gradient(180deg,var(--bg2),var(--bg));font-weight:600;color:var(--accent1);border-top:1.5px solid var(--border2);font-size:11px}
+table.sheet tr.total-row td:first-child{color:var(--text2)}
+.cell-input{width:100%;min-width:72px;background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 7px;font-size:12px;font-family:inherit;color:var(--text1);text-align:right;transition:border-color 0.15s,background 0.15s;outline:none}
+.cell-input:hover{border-color:var(--border2);background:rgba(98,41,238,0.03)}
+.cell-input:focus{border-color:var(--accent2);background:rgba(146,103,254,0.07)}
+.cell-input::placeholder{color:var(--text3)}
+td.row-total{font-weight:600;color:var(--accent1);font-size:12px;padding:5px 10px;min-width:88px;white-space:nowrap}
+
+/* BALANCE FIELDS */
+.balance-row{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap}
+.balance-field{flex:1;min-width:160px;background:var(--white);border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.balance-field label{font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap}
+.balance-input{background:transparent;border:none;outline:none;font-size:15px;font-weight:600;color:var(--accent1);font-family:inherit;text-align:right;width:130px}
+
+/* SETTLE */
+.person-block{margin-bottom:20px}
+.person-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.person-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;box-shadow:var(--shadow2);flex-shrink:0}
+.av-shizu{background:linear-gradient(135deg,#F2A7C3,#E07BAA)}
+.av-dane{background:linear-gradient(135deg,#9267FE,#6229EE)}
+.person-name{font-size:16px;font-weight:600;color:var(--text1)}
+.person-sub{font-size:11px;color:var(--text3)}
+.net-badge{margin-left:auto;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.net-positive{background:rgba(98,41,238,0.1);color:var(--accent1)}
+.net-negative{background:var(--pink-bg);color:#C0457A}
+.net-zero{background:var(--bg2);color:var(--text3)}
+.ledger-tables{display:flex;flex-direction:column;gap:12px}
+.ledger-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.ledger-card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ledger-card-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em}
+.ledger-total{font-size:16px;font-weight:600;color:var(--accent1)}
+.ledger-total.pink-total{color:#C0457A}
+table.ledger-tbl{width:100%;border-collapse:collapse;font-size:13px}
+table.ledger-tbl th{background:var(--bg);color:var(--text3);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+table.ledger-tbl th:last-child{text-align:right;width:36px}
+table.ledger-tbl td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.ledger-tbl tr:last-child td{border-bottom:none}
+table.ledger-tbl tr:hover td{background:rgba(98,41,238,0.025)}
+.ledger-input{background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:13px;font-family:inherit;color:var(--text1);width:100%;outline:none;transition:border-color 0.15s,background 0.15s}
+.ledger-input:hover{border-color:var(--border2);background:rgba(98,41,238,0.03)}
+.ledger-input:focus{border-color:var(--accent2);background:rgba(146,103,254,0.07)}
+.ledger-input.amount-input{text-align:right}
+.btn-del{background:none;border:none;cursor:pointer;color:var(--text3);border-radius:6px;padding:4px 6px;font-size:15px;line-height:1;transition:color 0.15s,background 0.15s;font-family:inherit}
+.btn-del:hover{color:#C0457A;background:var(--pink-bg)}
+.btn-add-row{width:100%;padding:9px;background:none;border:none;cursor:pointer;color:var(--accent2);font-size:12px;font-weight:500;font-family:inherit;text-align:center;border-top:1px solid var(--border);transition:background 0.15s,color 0.15s}
+.btn-add-row:hover{background:rgba(98,41,238,0.05);color:var(--accent1)}
+
+/* HOME SETTLE PREVIEW */
+.settle-preview{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.settle-preview-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.settle-preview-row:last-child{border-bottom:none}
+.settle-preview-label{color:var(--text2)}
+.settle-preview-val{font-weight:600;color:var(--accent1)}
+.settle-preview-val.pink-val{color:#C0457A}
+.divider{height:1px;background:var(--border);margin:4px 0}
+
+/* PAGE TITLE */
+.page-title{padding:16px 0 4px}
+.page-title h2{font-size:22px;font-weight:300;color:var(--text1);letter-spacing:-0.02em}
+.page-title p{font-size:12px;color:var(--text3);margin-top:2px}
+</style>
+</head>
+<body>
+<div id="offline-pill">オフライン Offline</div>
+
+<div id="install-banner">
+  <span>📲 ホーム画面に追加してオフラインで使えます</span>
+  <button id="install-btn">インストール</button>
+  <button class="dismiss" id="dismiss-btn" aria-label="閉じる">✕</button>
+</div>
+
+<div id="app">
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-logo">家計簿</div>
+      <div class="topbar-sub">Household Finance</div>
+    </div>
+    <div class="avatars">
+      <div class="av av-d" title="Dane">D</div>
+      <div class="av av-s" title="Shizu">S</div>
+    </div>
+  </div>
+
+  <div class="main-scroll">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="hero">
+        <div class="hero-label">総資産 Total Assets</div>
+        <div class="hero-amount" id="hero-total"><span>¥</span>—</div>
+        <div class="hero-row">
+          <div class="hero-stat">
+            <div class="hero-stat-label">楽天銀行</div>
+            <div class="hero-stat-val" id="home-bank">—</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">現金</div>
+            <div class="hero-stat-val" id="home-cash">—</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">年度</div>
+            <div class="hero-stat-val" id="home-year">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-label">精算サマリー Settlement</div>
+      <div class="settle-preview" id="home-settle"></div>
+
+      <div class="sec-label">直近入力月 Latest Month</div>
+      <div class="cards3" id="home-month-cards"></div>
+    </div>
+
+    <!-- OURS -->
+    <div class="page" id="page-ours">
+      <div class="page-title">
+        <h2>OURS <span style="color:var(--accent2)">家計</span></h2>
+        <p>Shared wallet · all years</p>
+      </div>
+
+      <div class="year-bar-wrap" id="ours-year-bar-wrap">
+        <div class="year-bar" id="ours-year-bar"></div>
+      </div>
+
+      <div class="scroll-hint">← スクロール →</div>
+      <div class="table-wrap">
+        <table class="sheet" id="ours-sheet">
+          <thead>
+            <tr>
+              <th>月</th>
+              <th>Dane</th>
+              <th>Shizu</th>
+              <th>電気</th>
+              <th>水道</th>
+              <th>インターネット</th>
+              <th>食費</th>
+              <th>日用品・その他</th>
+              <th>車検・自動車税・イヴ</th>
+              <th>楽天クレジット</th>
+              <th>合計</th>
+            </tr>
+          </thead>
+          <tbody id="ours-body"></tbody>
+          <tfoot><tr class="total-row" id="ours-totals"></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="balance-row">
+        <div class="balance-field">
+          <label for="rakuten-bal">楽天銀行残高</label>
+          <input class="balance-input" id="rakuten-bal" type="text" placeholder="¥0" oninput="onBalanceInput()">
+        </div>
+        <div class="balance-field">
+          <label for="wallet-bal">アワーワレット現金</label>
+          <input class="balance-input" id="wallet-bal" type="text" placeholder="¥0" oninput="onBalanceInput()">
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTLE -->
+    <div class="page" id="page-settle">
+      <div class="page-title">
+        <h2>精算管理 <span style="color:var(--accent2)">Settlement</span></h2>
+        <p>Who owes whom</p>
+      </div>
+
+      <div class="year-bar-wrap" id="settle-year-bar-wrap">
+        <div class="year-bar" id="settle-year-bar"></div>
+      </div>
+
+      <!-- SHIZU -->
+      <div class="person-block">
+        <div class="person-header">
+          <div class="person-av av-shizu">S</div>
+          <div>
+            <div class="person-name">Shizu</div>
+            <div class="person-sub">妻 Wife</div>
+          </div>
+          <div class="net-badge net-zero" id="shizu-net-badge">Net ¥0</div>
+        </div>
+        <div class="ledger-tables">
+          <div class="ledger-card">
+            <div class="ledger-card-header">
+              <div class="ledger-card-title">💳 Wallet → owes Shizu</div>
+              <div class="ledger-total" id="wos-total">¥0</div>
+            </div>
+            <table class="ledger-tbl">
+              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
+              <tbody id="wos-body"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addLedgerRow('wos')">＋ 行を追加 Add row</button>
+          </div>
+          <div class="ledger-card">
+            <div class="ledger-card-header">
+              <div class="ledger-card-title">💸 Shizu → owes Wallet</div>
+              <div class="ledger-total pink-total" id="sow-total">¥0</div>
+            </div>
+            <table class="ledger-tbl">
+              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
+              <tbody id="sow-body"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addLedgerRow('sow')">＋ 行を追加 Add row</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider" style="margin:8px 0 20px"></div>
+
+      <!-- DANE -->
+      <div class="person-block">
+        <div class="person-header">
+          <div class="person-av av-dane">D</div>
+          <div>
+            <div class="person-name">Dane</div>
+            <div class="person-sub">夫 Husband</div>
+          </div>
+          <div class="net-badge net-zero" id="dane-net-badge">Net ¥0</div>
+        </div>
+        <div class="ledger-tables">
+          <div class="ledger-card">
+            <div class="ledger-card-header">
+              <div class="ledger-card-title">💳 Wallet → owes Dane</div>
+              <div class="ledger-total" id="wod-total">¥0</div>
+            </div>
+            <table class="ledger-tbl">
+              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
+              <tbody id="wod-body"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addLedgerRow('wod')">＋ 行を追加 Add row</button>
+          </div>
+          <div class="ledger-card">
+            <div class="ledger-card-header">
+              <div class="ledger-card-title">💸 Dane → owes Wallet</div>
+              <div class="ledger-total pink-total" id="dow-total">¥0</div>
+            </div>
+            <table class="ledger-tbl">
+              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
+              <tbody id="dow-body"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addLedgerRow('dow')">＋ 行を追加 Add row</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-scroll -->
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchPage('home',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      <span>ホーム</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('ours',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      <span>OURS</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('settle',this)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 16l-4-4 4-4M17 8l4 4-4 4M14 4l-4 16"/></svg>
+      <span>精算</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const COLS   = ['dane','shizu','elec','water','net','food','misc','car','rakuten'];
+const START_YEAR = 2022;
+const CURRENT_YEAR = new Date().getFullYear();
+
+// ─── STATE ───────────────────────────────────────────────────
+let years    = [];
+let oursData = {};
+let balances = {};
+let ledgers  = {};
+let _id      = 1;
+
+let activeOursYear   = CURRENT_YEAR;
+let activeSettleYear = CURRENT_YEAR;
+
+// ─── PWA: SERVICE WORKER ─────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+// ─── PWA: INSTALL PROMPT ─────────────────────────────────────
+let deferredPrompt = null;
+const banner   = document.getElementById('install-banner');
+const installBtn = document.getElementById('install-btn');
+const dismissBtn = document.getElementById('dismiss-btn');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  banner.classList.add('show');
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  banner.classList.remove('show');
+});
+
+dismissBtn.addEventListener('click', () => {
+  banner.classList.remove('show');
+  deferredPrompt = null;
+});
+
+window.addEventListener('appinstalled', () => {
+  banner.classList.remove('show');
+  deferredPrompt = null;
+});
+
+// ─── PWA: OFFLINE DETECTION ──────────────────────────────────
+function updateOnlineStatus() {
+  document.body.classList.toggle('offline', !navigator.onLine);
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ─── PERSISTENCE ─────────────────────────────────────────────
+function save() {
+  try {
+    localStorage.setItem('kk2_years',    JSON.stringify(years));
+    localStorage.setItem('kk2_ours',     JSON.stringify(oursData));
+    localStorage.setItem('kk2_balances', JSON.stringify(balances));
+    localStorage.setItem('kk2_ledgers',  JSON.stringify(ledgers));
+    localStorage.setItem('kk2_id',       String(_id));
+  } catch(e) {}
+}
+
+function loadStorage() {
+  try {
+    const y = localStorage.getItem('kk2_years');
+    const o = localStorage.getItem('kk2_ours');
+    const b = localStorage.getItem('kk2_balances');
+    const l = localStorage.getItem('kk2_ledgers');
+    const i = localStorage.getItem('kk2_id');
+    if (y) years    = JSON.parse(y);
+    if (o) oursData = JSON.parse(o);
+    if (b) balances = JSON.parse(b);
+    if (l) ledgers  = JSON.parse(l);
+    if (i) _id      = parseInt(i) || 1;
+  } catch(e) {}
+}
+
+// ─── YEAR MANAGEMENT ─────────────────────────────────────────
+function ensureYear(yr) {
+  yr = parseInt(yr);
+  if (!years.includes(yr)) {
+    years.push(yr);
+    years.sort((a,b) => a - b);
+  }
+  if (!oursData[yr]) {
+    oursData[yr] = MONTHS.map(() => Object.fromEntries(COLS.map(c => [c,''])));
+  }
+  if (!balances[yr]) balances[yr] = { rakuten:'', wallet:'' };
+  if (!ledgers[yr])  ledgers[yr]  = { wos:[], sow:[], wod:[], dow:[] };
+}
+
+function addYear(section) {
+  const last = years.length ? years[years.length - 1] : CURRENT_YEAR - 1;
+  const next = last + 1;
+  ensureYear(next);
+  save();
+  if (section === 'ours') {
+    activeOursYear = next;
+    renderOursYearBar();
+    loadOursYear(next);
+  } else {
+    activeSettleYear = next;
+    renderSettleYearBar();
+    loadSettleYear(next);
+  }
+}
+
+// ─── FORMAT HELPERS ──────────────────────────────────────────
+function parseNum(s) {
+  if (!s && s !== 0) return 0;
+  return parseFloat(String(s).replace(/[¥,\s]/g,'')) || 0;
+}
+function fmtYen(n) {
+  n = Math.round(n);
+  if (!n) return '—';
+  return '¥' + n.toLocaleString('ja-JP');
+}
+function fmtInput(n) {
+  return n ? '¥' + Math.round(n).toLocaleString('ja-JP') : '';
+}
+
+// ─── OURS YEAR BAR ───────────────────────────────────────────
+function renderOursYearBar() {
+  const bar = document.getElementById('ours-year-bar');
+  bar.innerHTML = '';
+  years.forEach(yr => {
+    const btn = document.createElement('button');
+    btn.className = 'year-tab' + (yr === activeOursYear ? ' active' : '');
+    btn.textContent = String(yr);
+    btn.onclick = () => { activeOursYear = yr; renderOursYearBar(); loadOursYear(yr); };
+    bar.appendChild(btn);
+  });
+  const add = document.createElement('button');
+  add.className = 'year-tab add-btn';
+  add.textContent = '＋';
+  add.title = '年を追加';
+  add.onclick = () => addYear('ours');
+  bar.appendChild(add);
+  setTimeout(() => {
+    const active = bar.querySelector('.year-tab.active');
+    if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  }, 50);
+}
+
+// ─── OURS TABLE ──────────────────────────────────────────────
+function loadOursYear(yr) {
+  activeOursYear = yr;
+  ensureYear(yr);
+  const tbody = document.getElementById('ours-body');
+  tbody.innerHTML = '';
+  MONTHS.forEach((m, mi) => {
+    const tr = document.createElement('tr');
+    const tdM = document.createElement('td');
+    tdM.textContent = m;
+    tr.appendChild(tdM);
+    COLS.forEach(col => {
+      const td  = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type      = 'text';
+      inp.className = 'cell-input';
+      inp.placeholder = '¥';
+      const stored = oursData[yr][mi][col];
+      inp.value = stored ? fmtInput(parseNum(stored)) : '';
+      inp.addEventListener('focus', function() {
+        this.value = this.value.replace(/[¥,]/g,'');
+      });
+      inp.addEventListener('blur', function() {
+        const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
+        oursData[yr][mi][col] = n || '';
+        this.value = n ? fmtInput(n) : '';
+        updateOursTotals(yr);
+        updateHome();
+        save();
+      });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+    const tdT = document.createElement('td');
+    tdT.className = 'row-total';
+    tdT.id = 'rt-' + mi;
+    const rowSum = COLS.reduce((a,c) => a + parseNum(oursData[yr][mi][c]), 0);
+    tdT.textContent = rowSum ? fmtYen(rowSum) : '—';
+    tr.appendChild(tdT);
+    tbody.appendChild(tr);
+  });
+
+  const b = balances[yr];
+  document.getElementById('rakuten-bal').value = b.rakuten ? fmtInput(parseNum(b.rakuten)) : '';
+  document.getElementById('wallet-bal').value  = b.wallet  ? fmtInput(parseNum(b.wallet))  : '';
+
+  updateOursTotals(yr);
+  updateHome();
+}
+
+function updateOursTotals(yr) {
+  ensureYear(yr);
+  const colTotals = Object.fromEntries(COLS.map(c => [c,0]));
+  MONTHS.forEach((m, mi) => {
+    let rowSum = 0;
+    COLS.forEach(col => {
+      const v = parseNum(oursData[yr][mi][col]);
+      rowSum += v;
+      colTotals[col] += v;
+    });
+    const cell = document.getElementById('rt-' + mi);
+    if (cell) cell.textContent = rowSum ? fmtYen(rowSum) : '—';
+  });
+  const tfoot = document.getElementById('ours-totals');
+  tfoot.innerHTML = '';
+  const labelTd = document.createElement('td');
+  labelTd.textContent = '合計';
+  tfoot.appendChild(labelTd);
+  let grand = 0;
+  COLS.forEach(col => {
+    const td = document.createElement('td');
+    td.textContent = colTotals[col] ? fmtYen(colTotals[col]) : '—';
+    tfoot.appendChild(td);
+    grand += colTotals[col];
+  });
+  const tdG = document.createElement('td');
+  tdG.className = 'row-total';
+  tdG.textContent = grand ? fmtYen(grand) : '—';
+  tfoot.appendChild(tdG);
+}
+
+function onBalanceInput() {
+  ensureYear(activeOursYear);
+  const r = document.getElementById('rakuten-bal').value;
+  const w = document.getElementById('wallet-bal').value;
+  balances[activeOursYear].rakuten = r;
+  balances[activeOursYear].wallet  = w;
+  save();
+  updateHome();
+}
+
+// ─── SETTLE YEAR BAR ─────────────────────────────────────────
+function renderSettleYearBar() {
+  const bar = document.getElementById('settle-year-bar');
+  bar.innerHTML = '';
+  years.forEach(yr => {
+    const btn = document.createElement('button');
+    btn.className = 'year-tab' + (yr === activeSettleYear ? ' active' : '');
+    btn.textContent = String(yr);
+    btn.onclick = () => { activeSettleYear = yr; renderSettleYearBar(); loadSettleYear(yr); };
+    bar.appendChild(btn);
+  });
+  const add = document.createElement('button');
+  add.className = 'year-tab add-btn';
+  add.textContent = '＋';
+  add.title = '年を追加';
+  add.onclick = () => addYear('settle');
+  bar.appendChild(add);
+  setTimeout(() => {
+    const active = bar.querySelector('.year-tab.active');
+    if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  }, 50);
+}
+
+// ─── LEDGER ──────────────────────────────────────────────────
+function loadSettleYear(yr) {
+  activeSettleYear = yr;
+  ensureYear(yr);
+  const keys = ['wos','sow','wod','dow'];
+  const bodyIds = { wos:'wos-body', sow:'sow-body', wod:'wod-body', dow:'dow-body' };
+  keys.forEach(k => buildLedger(yr, k, bodyIds[k]));
+  updateLedgerTotals(yr);
+}
+
+function buildLedger(yr, tableKey, bodyId) {
+  ensureYear(yr);
+  const tbody = document.getElementById(bodyId);
+  tbody.innerHTML = '';
+  ledgers[yr][tableKey].forEach(row => {
+    tbody.appendChild(makeLedgerRow(yr, tableKey, bodyId, row));
+  });
+}
+
+function makeLedgerRow(yr, tableKey, bodyId, row) {
+  const tr = document.createElement('tr');
+  const tdDate = document.createElement('td');
+  const inpDate = document.createElement('input');
+  inpDate.type = 'date'; inpDate.className = 'ledger-input';
+  inpDate.value = row.date || '';
+  inpDate.addEventListener('change', function(){ row.date = this.value; save(); });
+  tdDate.appendChild(inpDate); tr.appendChild(tdDate);
+
+  const tdP = document.createElement('td');
+  const inpP = document.createElement('input');
+  inpP.type = 'text'; inpP.className = 'ledger-input';
+  inpP.value = row.purpose || ''; inpP.placeholder = '理由 / Purpose';
+  inpP.addEventListener('input', function(){ row.purpose = this.value; save(); });
+  tdP.appendChild(inpP); tr.appendChild(tdP);
+
+  const tdA = document.createElement('td');
+  const inpA = document.createElement('input');
+  inpA.type = 'text'; inpA.className = 'ledger-input amount-input';
+  inpA.value = row.amount ? fmtInput(row.amount) : '';
+  inpA.placeholder = '¥';
+  inpA.addEventListener('focus', function(){ this.value = this.value.replace(/[¥,]/g,''); });
+  inpA.addEventListener('blur', function(){
+    const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
+    row.amount = n;
+    this.value = n ? fmtInput(n) : '';
+    updateLedgerTotals(yr); updateHome(); save();
+  });
+  tdA.appendChild(inpA); tr.appendChild(tdA);
+
+  const tdDel = document.createElement('td');
+  tdDel.style.textAlign = 'right';
+  const btn = document.createElement('button');
+  btn.className = 'btn-del'; btn.innerHTML = '×'; btn.title = '削除';
+  btn.addEventListener('click', () => {
+    ledgers[yr][tableKey] = ledgers[yr][tableKey].filter(r => r.id !== row.id);
+    buildLedger(yr, tableKey, bodyId);
+    updateLedgerTotals(yr); updateHome(); save();
+  });
+  tdDel.appendChild(btn); tr.appendChild(tdDel);
+  return tr;
+}
+
+function addLedgerRow(tableKey) {
+  const bodyIds = { wos:'wos-body', sow:'sow-body', wod:'wod-body', dow:'dow-body' };
+  const yr = activeSettleYear;
+  ensureYear(yr);
+  const row = { id: _id++, date:'', purpose:'', amount:0 };
+  ledgers[yr][tableKey].push(row);
+  const tbody = document.getElementById(bodyIds[tableKey]);
+  tbody.appendChild(makeLedgerRow(yr, tableKey, bodyIds[tableKey], row));
+  updateLedgerTotals(yr); save();
+}
+
+function updateLedgerTotals(yr) {
+  ensureYear(yr);
+  const sum = k => ledgers[yr][k].reduce((a,r) => a + parseNum(r.amount), 0);
+  const wosT = sum('wos'), sowT = sum('sow'), wodT = sum('wod'), dowT = sum('dow');
+  const fmt0 = n => n ? '¥' + n.toLocaleString('ja-JP') : '¥0';
+  document.getElementById('wos-total').textContent = fmt0(wosT);
+  document.getElementById('sow-total').textContent = fmt0(sowT);
+  document.getElementById('wod-total').textContent = fmt0(wodT);
+  document.getElementById('dow-total').textContent = fmt0(dowT);
+
+  const shizuNet = wosT - sowT;
+  const daneNet  = wodT - dowT;
+  const sb = document.getElementById('shizu-net-badge');
+  const db = document.getElementById('dane-net-badge');
+
+  sb.textContent = shizuNet === 0 ? 'Net ¥0'
+    : shizuNet > 0 ? '→ Shizu ¥' + shizuNet.toLocaleString('ja-JP')
+    : '→ Wallet ¥' + Math.abs(shizuNet).toLocaleString('ja-JP');
+  sb.className = 'net-badge ' + (shizuNet > 0 ? 'net-positive' : shizuNet < 0 ? 'net-negative' : 'net-zero');
+
+  db.textContent = daneNet === 0 ? 'Net ¥0'
+    : daneNet > 0 ? '→ Dane ¥' + daneNet.toLocaleString('ja-JP')
+    : '→ Wallet ¥' + Math.abs(daneNet).toLocaleString('ja-JP');
+  db.className = 'net-badge ' + (daneNet > 0 ? 'net-positive' : daneNet < 0 ? 'net-negative' : 'net-zero');
+}
+
+// ─── HOME ────────────────────────────────────────────────────
+function updateHome() {
+  const yr = activeOursYear;
+  ensureYear(yr);
+  const b  = balances[yr];
+  const rakuten = parseNum(b.rakuten);
+  const wallet  = parseNum(b.wallet);
+  const total   = rakuten + wallet;
+
+  document.getElementById('hero-total').innerHTML = '<span>¥</span>' + (total ? total.toLocaleString('ja-JP') : '—');
+  document.getElementById('home-bank').textContent = rakuten ? '¥' + rakuten.toLocaleString('ja-JP') : '—';
+  document.getElementById('home-cash').textContent = wallet  ? '¥' + wallet.toLocaleString('ja-JP')  : '—';
+  document.getElementById('home-year').textContent = String(yr);
+
+  const syr = activeSettleYear;
+  ensureYear(syr);
+  const sum = k => ledgers[syr][k].reduce((a,r) => a + parseNum(r.amount), 0);
+  const wosT = sum('wos'), sowT = sum('sow'), wodT = sum('wod'), dowT = sum('dow');
+  const fmt0 = n => '¥' + (n||0).toLocaleString('ja-JP');
+  document.getElementById('home-settle').innerHTML = [
+    { label:'Wallet → owes Shizu', val:wosT, pink:false },
+    { label:'Shizu → owes Wallet', val:sowT, pink:true  },
+    { label:'Wallet → owes Dane',  val:wodT, pink:false },
+    { label:'Dane → owes Wallet',  val:dowT, pink:true  },
+  ].map(r => `<div class="settle-preview-row">
+      <span class="settle-preview-label">${r.label}</span>
+      <span class="settle-preview-val ${r.pink?'pink-val':''}">${fmt0(r.val)}</span>
+    </div>`).join('');
+
+  let lastMi = -1;
+  for (let i = MONTHS.length - 1; i >= 0; i--) {
+    if (COLS.some(c => oursData[yr][i][c])) { lastMi = i; break; }
+  }
+  const mc = document.getElementById('home-month-cards');
+  if (lastMi < 0) {
+    mc.innerHTML = '<div style="color:var(--text3);font-size:12px;grid-column:1/-1;padding:8px 0">まだ入力がありません</div>';
+  } else {
+    const d   = oursData[yr][lastMi];
+    const tot = COLS.reduce((a,c) => a + parseNum(d[c]), 0);
+    mc.innerHTML = `
+      <div class="scard accent"><div class="scard-label">${MONTHS[lastMi]} 合計</div><div class="scard-val">${fmtYen(tot)}</div><div class="scard-sub">Total OURS ${yr}</div></div>
+      <div class="scard"><div class="scard-label">食費</div><div class="scard-val">${fmtYen(parseNum(d.food))}</div><div class="scard-sub">Food</div></div>
+      <div class="scard pink"><div class="scard-label">日用品</div><div class="scard-val">${fmtYen(parseNum(d.misc))}</div><div class="scard-sub">Daily</div></div>`;
+  }
+}
+
+// ─── NAV ─────────────────────────────────────────────────────
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  document.querySelector('.main-scroll').scrollTop = 0;
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+(function init() {
+  loadStorage();
+  if (!years.length) {
+    for (let y = START_YEAR; y <= CURRENT_YEAR; y++) ensureYear(y);
+  }
+  if (!years.includes(activeOursYear))   activeOursYear   = years[years.length - 1];
+  if (!years.includes(activeSettleYear)) activeSettleYear = years[years.length - 1];
+  renderOursYearBar();
+  renderSettleYearBar();
+  loadOursYear(activeOursYear);
+  loadSettleYear(activeSettleYear);
+  updateHome();
+})();
+</script>
+</body>
+</html>
