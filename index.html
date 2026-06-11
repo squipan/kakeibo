@@ -183,10 +183,19 @@ table.ledger-tbl tr:hover td{background:rgba(98,41,238,0.025)}
 .signin-icon{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#6229EE,#9267FE);display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 20px}
 .signin-title{font-size:28px;font-weight:300;color:var(--text1);letter-spacing:-0.02em;margin-bottom:6px}
 .signin-sub{font-size:12px;color:var(--text3);margin-bottom:32px;line-height:1.6}
-.signin-google-btn{width:100%;padding:14px;border:1.5px solid var(--border2);border-radius:12px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;color:var(--text1);font-family:inherit;transition:background 0.18s,box-shadow 0.18s}
-.signin-google-btn:hover{background:var(--bg);box-shadow:var(--shadow2)}
-.signin-google-btn svg{width:20px;height:20px;flex-shrink:0}
 .signin-note{font-size:11px;color:var(--text3);margin-top:20px;line-height:1.5}
+.who-row{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
+.who-btn{flex:1;padding:20px 12px;border:2px solid var(--border2);border-radius:18px;background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.who-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
+.who-btn.who-dane{border-color:rgba(98,41,238,0.25)}
+.who-btn.who-dane:hover{border-color:var(--accent1);background:rgba(98,41,238,0.05)}
+.who-btn.who-shizu{border-color:rgba(242,167,195,0.4)}
+.who-btn.who-shizu:hover{border-color:#E07BAA;background:var(--pink-bg)}
+.who-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;box-shadow:var(--shadow2)}
+.who-av-d{background:linear-gradient(135deg,#9267FE,#6229EE)}
+.who-av-s{background:linear-gradient(135deg,#F2A7C3,#E07BAA)}
+.who-name{font-size:15px;font-weight:600;color:var(--text1)}
+.who-sub{font-size:11px;color:var(--text3)}
 
 /* SYNC STATUS */
 .sync-pill{font-size:10px;font-weight:600;letter-spacing:0.04em;padding:4px 10px;border-radius:20px;transition:all 0.3s;white-space:nowrap}
@@ -206,12 +215,20 @@ table.ledger-tbl tr:hover td{background:rgba(98,41,238,0.025)}
   <div class="signin-card">
     <div class="signin-icon">家</div>
     <h1 class="signin-title">家計簿</h1>
-    <p class="signin-sub">Household Finance<br>Dane &amp; Shizu</p>
-    <button class="signin-google-btn" onclick="signIn()">
-      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-8 20-20 0-1.3-.2-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.3 0-9.7-3-11.3-7.5L6 33.8C9.4 39.7 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.7 35.8 44 30.3 44 24c0-1.3-.2-2.7-.4-4z"/></svg>
-      Googleでサインイン
-    </button>
-    <p class="signin-note">🔒 家族専用アプリ · データはリアルタイムで同期されます</p>
+    <p class="signin-sub">Household Finance<br>どちらですか？ Who are you?</p>
+    <div class="who-row">
+      <button class="who-btn who-dane" onclick="chooseUser('dane')">
+        <div class="who-av who-av-d">D</div>
+        <div class="who-name">Dane</div>
+        <div class="who-sub">夫 Husband</div>
+      </button>
+      <button class="who-btn who-shizu" onclick="chooseUser('shizu')">
+        <div class="who-av who-av-s">S</div>
+        <div class="who-name">Shizu</div>
+        <div class="who-sub">妻 Wife</div>
+      </button>
+    </div>
+    <p class="signin-note">次回から自動でサインイン · Auto-signs in next time</p>
   </div>
 </div>
 
@@ -462,6 +479,7 @@ if ('serviceWorker' in navigator) {
 
 // ─── FIREBASE AUTH ────────────────────────────────────────────
 let currentUser = null;
+let whoAmI     = localStorage.getItem('kk2_who') || null; // 'dane' or 'shizu'
 let userIsEditing = false;
 let saveTimer = null;
 let unsubFirestore = null;
@@ -469,27 +487,47 @@ let unsubFirestore = null;
 document.addEventListener('focusin',  () => { userIsEditing = true; });
 document.addEventListener('focusout', () => { setTimeout(() => { userIsEditing = false; }, 300); });
 
-function signIn() {
-  const p = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(p).catch(err => alert('サインイン失敗: ' + err.message));
+function chooseUser(name) {
+  whoAmI = name;
+  localStorage.setItem('kk2_who', name);
+  // Sign in anonymously — silent, no popup, just for Firestore access
+  auth.signInAnonymously().catch(err => console.error('Anon auth failed:', err));
 }
+
 function signOut() {
+  whoAmI = null;
+  localStorage.removeItem('kk2_who');
   if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
   auth.signOut();
 }
 
 auth.onAuthStateChanged(user => {
   currentUser = user;
-  if (user) {
+  if (user && whoAmI) {
+    // Known user + auth → show app
     document.getElementById('signin-overlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
+    highlightCurrentUser();
     subscribeToData();
+  } else if (!user && whoAmI) {
+    // Have a saved name but no auth session → re-auth anonymously
+    auth.signInAnonymously().catch(() => {});
   } else {
+    // No name chosen → show picker
     document.getElementById('signin-overlay').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
     if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
   }
 });
+
+function highlightCurrentUser() {
+  // Visually highlight which avatar is 'me' in the topbar
+  const d = document.querySelector('.av-d');
+  const s = document.querySelector('.av-s');
+  if (!d || !s) return;
+  if (whoAmI === 'dane')  { d.style.boxShadow = '0 0 0 2.5px #6229EE'; s.style.opacity = '0.45'; }
+  if (whoAmI === 'shizu') { s.style.boxShadow = '0 0 0 2.5px #E07BAA'; d.style.opacity = '0.45'; }
+}
 
 // ─── FIRESTORE SYNC ───────────────────────────────────────────
 function subscribeToData() {
