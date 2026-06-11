@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#857ECF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -486,12 +486,6 @@ let unsubFirestore = null;
 
 document.addEventListener('focusin', e => {
   userIsEditing = true;
-  // Fix iOS: scroll input into view after keyboard opens
-  if (e.target.tagName === 'INPUT') {
-    setTimeout(() => {
-      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 350);
-  }
 });
 document.addEventListener('focusout', () => { setTimeout(() => { userIsEditing = false; }, 300); });
 
