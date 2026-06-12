@@ -125,10 +125,15 @@ table.sheet tr.total-row td:first-child{color:var(--text2)}
 td.row-total{font-weight:600;color:var(--accent1);font-size:12px;padding:5px 10px;min-width:88px;white-space:nowrap}
 
 /* BALANCE FIELDS */
+.balance-section{margin-bottom:18px}
+.balance-total-card{background:linear-gradient(135deg,var(--accent2) 0%,var(--accent1) 100%);border-radius:var(--r);padding:16px 20px;color:#fff;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);margin-bottom:8px}
+.balance-total-label{font-size:11px;opacity:0.9;font-weight:500;text-transform:uppercase;letter-spacing:0.08em}
+.balance-total-val{font-size:24px;font-weight:600;letter-spacing:-0.02em}
 .balance-row{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap}
-.balance-field{flex:1;min-width:160px;background:var(--white);border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.balance-field{flex:1;min-width:160px;background:var(--white);border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border-color 0.15s,background-color 0.15s,box-shadow 0.15s}
+.balance-field:focus-within{border-color:var(--accent2);background:var(--white);box-shadow:0 0 0 3px rgba(118,148,125,0.08)}
 .balance-field label{font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap}
-.balance-input{background:transparent;border:none;outline:none;font-size:16px;font-weight:600;color:var(--accent1);font-family:inherit;text-align:right;width:130px}
+.balance-input{background:transparent;border:none;outline:none;font-size:16px;font-weight:600;color:var(--accent1);font-family:inherit;text-align:right;flex:1;min-width:0}
 
 /* SETTLE */
 .person-block{margin-bottom:20px}
@@ -327,6 +332,24 @@ table.ledger-tbl tr:hover td{background:rgba(133,126,207,0.025)}
         <p>Shared wallet · all years</p>
       </div>
 
+      <!-- BALANCE SECTION AT THE TOP -->
+      <div class="balance-section">
+        <div class="balance-total-card">
+          <div class="balance-total-label">残高合計 Total Balance</div>
+          <div class="balance-total-val" id="ours-balance-total">¥0</div>
+        </div>
+        <div class="balance-row">
+          <div class="balance-field">
+            <label for="rakuten-bal">楽天銀行残高</label>
+            <input class="balance-input" id="rakuten-bal" type="text" placeholder="¥0">
+          </div>
+          <div class="balance-field">
+            <label for="wallet-bal">アワーワレット現金</label>
+            <input class="balance-input" id="wallet-bal" type="text" placeholder="¥0">
+          </div>
+        </div>
+      </div>
+
       <div class="year-bar-wrap" id="ours-year-bar-wrap">
         <div class="year-bar" id="ours-year-bar"></div>
       </div>
@@ -343,7 +366,7 @@ table.ledger-tbl tr:hover td{background:rgba(133,126,207,0.025)}
           <div class="month-card-net" id="ours-month-net">—</div>
         </div>
         <div class="month-card-body">
-          <div class="input-section-title">収入 Income</div>
+          <div class="input-section-title">拠出 Contribution</div>
           <div class="grid-2">
             <div class="field-group">
               <label for="inp-dane">Dane</label>
@@ -400,17 +423,6 @@ table.ledger-tbl tr:hover td{background:rgba(133,126,207,0.025)}
         <div class="summary-footer-row" id="annual-summary-footer">
           <div>合計</div>
           <div id="annual-summary-grand">—</div>
-        </div>
-      </div>
-
-      <div class="balance-row">
-        <div class="balance-field">
-          <label for="rakuten-bal">楽天銀行残高</label>
-          <input class="balance-input" id="rakuten-bal" type="text" placeholder="¥0" oninput="onBalanceInput()">
-        </div>
-        <div class="balance-field">
-          <label for="wallet-bal">アワーワレット現金</label>
-          <input class="balance-input" id="wallet-bal" type="text" placeholder="¥0" oninput="onBalanceInput()">
         </div>
       </div>
     </div>
@@ -872,6 +884,7 @@ function selectOursMonth(mi) {
 
 function initOursPage() {
   initOursFormListeners();
+  initBalanceFormListeners();
   renderOursMonthBar();
 }
 
@@ -917,6 +930,15 @@ function loadOursYear(yr) {
   const targetWallet = b.wallet ? fmtInput(parseNum(b.wallet)) : '';
   if (document.activeElement !== walletBal && walletBal.value !== targetWallet) {
     walletBal.value = targetWallet;
+  }
+
+  // Update total balance display at the top of OURS tab
+  const totalBalEl = document.getElementById('ours-balance-total');
+  if (totalBalEl) {
+    const rVal = parseNum(b.rakuten);
+    const wVal = parseNum(b.wallet);
+    const totalBal = rVal + wVal;
+    totalBalEl.textContent = totalBal ? '¥' + totalBal.toLocaleString('ja-JP') : '¥0';
   }
 
   updateOursTotals(yr);
@@ -987,14 +1009,43 @@ function updateOursTotals(yr) {
   }
 }
 
-function onBalanceInput() {
-  ensureYear(activeOursYear);
-  const r = document.getElementById('rakuten-bal').value;
-  const w = document.getElementById('wallet-bal').value;
-  balances[activeOursYear].rakuten = r;
-  balances[activeOursYear].wallet  = w;
-  save();
-  updateHome();
+function initBalanceFormListeners() {
+  const fields = {
+    'rakuten-bal': 'rakuten',
+    'wallet-bal': 'wallet'
+  };
+  
+  const updateLocalTotal = () => {
+    const rVal = parseNum(document.getElementById('rakuten-bal').value);
+    const wVal = parseNum(document.getElementById('wallet-bal').value);
+    const totalBal = rVal + wVal;
+    const totalBalEl = document.getElementById('ours-balance-total');
+    if (totalBalEl) {
+      totalBalEl.textContent = totalBal ? '¥' + totalBal.toLocaleString('ja-JP') : '¥0';
+    }
+  };
+
+  Object.entries(fields).forEach(([id, key]) => {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+
+    inp.addEventListener('focus', function() {
+      this.value = this.value.replace(/[¥,]/g,'');
+    });
+
+    inp.addEventListener('input', updateLocalTotal);
+
+    inp.addEventListener('blur', function() {
+      const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
+      const yr = activeOursYear;
+      ensureYear(yr);
+      balances[yr][key] = n || '';
+      this.value = n ? fmtInput(n) : '';
+      updateLocalTotal();
+      updateHome();
+      save();
+    });
+  });
 }
 
 // ─── SETTLE YEAR BAR ─────────────────────────────────────────
