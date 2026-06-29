@@ -1,1245 +1,3505 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#76947D">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="家計簿">
-<meta name="description" content="Shared household budget tracker">
-<link rel="manifest" href="manifest.json">
-<!-- Apple touch icon (inline SVG data URI) -->
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>家計簿 — Household Finance</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#F4F6F4;--bg2:#E6EAE6;--white:#FFFFFF;
-  --accent1:#76947D;--accent2:#93A897;--accent3:#BAC8BE;
-  --pink:#DFABA1;--pink-bg:#FDF4F2;--pink-text:#A76558;
-  --text1:#243026;--text2:#4E5E51;--text3:#88978B;
-  --border:rgba(118,148,125,0.12);--border2:rgba(118,148,125,0.22);
-  --shadow:0 4px 20px rgba(118,148,125,0.06);
-  --shadow2:0 8px 30px rgba(118,148,125,0.12);
-  --r:14px;--r2:10px;--nav-h:72px
-}
-html,body{height:100%;width:100%;overflow-x:hidden;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text1);font-size:14px;-webkit-font-smoothing:antialiased}
-#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;overflow-x:hidden;width:100%}
-.main-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 calc(var(--nav-h) + 16px)}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#76947D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="家計簿">
+  <meta name="description" content="Shared household budget tracker">
+  <link rel="manifest" href="manifest.json">
+  <!-- Apple touch icon (inline SVG data URI) -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>家計簿 — Household Finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-/* INSTALL BANNER */
-#install-banner{display:none;position:sticky;top:0;z-index:200;background:var(--accent1);color:#fff;padding:10px 16px;font-size:12px;align-items:center;gap:10px}
-#install-banner.show{display:flex}
-#install-banner span{flex:1}
-#install-banner button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap}
-#install-banner button.dismiss{background:none;border:none;font-size:16px;padding:4px 6px;opacity:0.7}
+    :root {
+      --bg: #F6F8F6;
+      --bg2: #E8EDE8;
+      --white: #FFFFFF;
+      --accent1: #3E5A47;
+      --accent1-glow: rgba(62, 90, 71, 0.12);
+      --accent2: #65816E;
+      --accent3: #8DA997;
+      --accent-light: #ECF1ED;
+      --pink: #D38E82;
+      --pink-glow: rgba(211, 142, 130, 0.15);
+      --pink-bg: #FAF0EE;
+      --pink-text: #964A3E;
+      --text1: #1B261F;
+      --text2: #3F4E44;
+      --text3: #75877B;
+      --border: rgba(62, 90, 71, 0.08);
+      --border2: rgba(62, 90, 71, 0.16);
+      --shadow: 0 4px 18px rgba(62, 90, 71, 0.03), 0 1px 3px rgba(62, 90, 71, 0.02);
+      --shadow2: 0 16px 40px rgba(62, 90, 71, 0.08), 0 2px 8px rgba(62, 90, 71, 0.02);
+      --r: 20px;
+      --r2: 12px;
+      --nav-h: 76px;
+    }
 
-/* TOPBAR */
-.topbar{padding:18px 20px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:50}
-.topbar-logo{font-size:18px;font-weight:600;color:var(--accent1);letter-spacing:-0.02em}
-.topbar-sub{font-size:11px;color:var(--text3)}
-.avatars{display:flex;gap:6px}
-.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid var(--white);box-shadow:var(--shadow)}
-.av-d{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#fff}
-.av-s{background:linear-gradient(135deg,var(--pink),#E594A5);color:#fff}
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      overflow-x: hidden;
+      font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text1);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
 
-/* OFFLINE PILL */
-#offline-pill{display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);background:var(--text1);color:#fff;font-size:11px;padding:5px 14px;border-radius:20px;z-index:300;box-shadow:var(--shadow2)}
-body.offline #offline-pill{display:block}
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      width: 100%;
+      position: relative;
+    }
 
-/* BOTTOM NAV */
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:rgba(255,255,255,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding:0 8px 8px}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;padding:8px 18px;border-radius:12px;transition:color 0.2s;font-family:inherit}
-.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.nav-btn.active{color:var(--accent1)}
-.nav-btn.active svg{stroke:var(--accent1)}
+    .main-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 0 calc(var(--nav-h) + 32px);
+    }
 
-/* PAGES */
-.page{display:none;padding:0 16px 8px}
-.page.active{display:block}
+    /* INSTALL BANNER */
+    #install-banner {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--accent1);
+      color: #fff;
+      padding: 12px 16px;
+      font-size: 12px;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
 
-/* YEAR TAB BAR */
-.year-bar-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px 14px;padding:0 16px}
-.year-bar-wrap::-webkit-scrollbar{display:none}
-.year-bar{display:flex;gap:6px;width:max-content;padding-bottom:2px}
-.year-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--white);color:var(--text2);transition:all 0.18s;white-space:nowrap;font-family:inherit}
-.year-tab.active{background:var(--accent1);color:#fff;border-color:var(--accent1)}
-.year-tab.add-btn{background:var(--bg2);color:var(--accent1);border-color:var(--border2);font-size:15px;padding:5px 12px}
-.year-tab.add-btn:hover{background:var(--accent1);color:#fff}
+    #install-banner.show {
+      display: flex;
+    }
 
-/* HERO */
-.hero{background:linear-gradient(135deg,var(--accent1) 0%,var(--accent2) 60%,var(--pink) 100%);border-radius:var(--r);padding:24px 22px;margin:0 0 16px;color:#fff;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.08)}
-.hero::after{content:'';position:absolute;bottom:-20px;right:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05)}
-.hero-label{font-size:11px;opacity:0.75;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
-.hero-amount{font-size:36px;font-weight:300;letter-spacing:-0.03em;line-height:1.1}
-.hero-amount span{font-size:18px;font-weight:400;opacity:0.8}
-.hero-row{display:flex;gap:20px;margin-top:18px}
-.hero-stat-label{font-size:10px;opacity:0.65;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px}
-.hero-stat-val{font-size:15px;font-weight:500}
+    #install-banner span {
+      flex: 1;
+      font-weight: 500;
+    }
 
-/* CARDS */
-.cards2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.cards3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
-.scard{background:var(--white);border-radius:var(--r2);padding:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
-.scard-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
-.scard-val{font-size:18px;font-weight:500;color:var(--text1);letter-spacing:-0.02em}
-.scard-sub{font-size:10px;color:var(--text3);margin-top:3px}
-.scard.accent{background:linear-gradient(135deg,var(--accent1),var(--accent2));border-color:transparent}
-.scard.accent .scard-label,.scard.accent .scard-val,.scard.accent .scard-sub{color:#fff}
-.scard.accent .scard-label{opacity:0.75}
-.scard.pink{background:var(--pink-bg);border-color:rgba(234,160,176,0.3)}
-.scard.pink .scard-val{color:var(--pink-text)}
+    #install-banner button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
 
-/* SEC LABEL */
-.sec-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin:18px 0 10px}
+    #install-banner button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
 
-/* SCROLL HINT */
-.scroll-hint{font-size:10px;color:var(--text3);text-align:right;margin-bottom:4px;letter-spacing:0.04em}
+    #install-banner button.dismiss {
+      background: none;
+      border: none;
+      font-size: 16px;
+      padding: 4px 6px;
+      opacity: 0.7;
+    }
 
-/* SPREADSHEET TABLE */
-.table-wrap{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);overflow-x:auto;margin-bottom:14px;-webkit-overflow-scrolling:touch}
-table.sheet{border-collapse:collapse;width:100%;min-width:820px;font-size:12px}
-table.sheet th{background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);color:var(--text2);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.07em;padding:10px;text-align:center;border-bottom:1.5px solid var(--border2);border-right:1px solid var(--border);white-space:nowrap}
-table.sheet th:first-child{text-align:left;padding-left:14px;min-width:52px}
-table.sheet th:last-child{border-right:none}
-table.sheet td{padding:5px 4px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;vertical-align:middle}
-table.sheet td:first-child{text-align:left;padding-left:14px;font-weight:600;color:var(--accent1);font-size:12px;white-space:nowrap;background:linear-gradient(90deg,rgba(133,126,207,0.04),transparent);position:sticky;left:0;z-index:1;min-width:52px}
-table.sheet td:last-child{border-right:none}
-table.sheet tr:last-child td{border-bottom:none}
-table.sheet tr:hover td{background:rgba(133,126,207,0.025)}
-table.sheet tr:hover td:first-child{background:linear-gradient(90deg,rgba(133,126,207,0.07),rgba(133,126,207,0.025))}
-table.sheet tr.total-row td{background:linear-gradient(180deg,var(--bg2),var(--bg));font-weight:600;color:var(--accent1);border-top:1.5px solid var(--border2);font-size:11px}
-table.sheet tr.total-row td:first-child{color:var(--text2)}
-.cell-input{width:100%;min-width:72px;background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 7px;font-size:16px;font-family:inherit;color:var(--text1);text-align:right;transition:border-color 0.15s,background 0.15s;outline:none}
-.cell-input:hover{border-color:var(--border2);background:rgba(133,126,207,0.03)}
-.cell-input:focus{border-color:var(--accent2);background:rgba(133,126,207,0.07)}
-.cell-input::placeholder{color:var(--text3)}
-td.row-total{font-weight:600;color:var(--accent1);font-size:12px;padding:5px 10px;min-width:88px;white-space:nowrap}
+    /* TOPBAR */
+    .topbar {
+      padding: 20px 20px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(246, 248, 246, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+    }
 
-/* BALANCE FIELDS */
-.balance-section{margin-bottom:18px}
-.balance-total-card{background:linear-gradient(135deg,var(--accent2) 0%,var(--accent1) 100%);border-radius:var(--r);padding:16px 20px;color:#fff;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);margin-bottom:8px}
-.balance-total-label{font-size:11px;opacity:0.9;font-weight:500;text-transform:uppercase;letter-spacing:0.08em}
-.balance-total-val{font-size:24px;font-weight:600;letter-spacing:-0.02em}
-.balance-row{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap}
-.balance-field{flex:1;min-width:160px;background:var(--white);border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border-color 0.15s,background-color 0.15s,box-shadow 0.15s}
-.balance-field:focus-within{border-color:var(--accent2);background:var(--white);box-shadow:0 0 0 3px rgba(118,148,125,0.08)}
-.balance-field label{font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap}
-.balance-input{background:transparent;border:none;outline:none;font-size:16px;font-weight:600;color:var(--accent1);font-family:inherit;text-align:right;flex:1;min-width:0}
+    .topbar-logo {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent1);
+      letter-spacing: -0.01em;
+    }
 
-/* SETTLE */
-.person-block{margin-bottom:20px}
-.person-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.person-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;box-shadow:var(--shadow2);flex-shrink:0}
-.av-shizu{background:linear-gradient(135deg,var(--pink),#E594A5)}
-.av-dane{background:linear-gradient(135deg,var(--accent2),var(--accent1))}
-.person-name{font-size:16px;font-weight:600;color:var(--text1)}
-.person-sub{font-size:11px;color:var(--text3)}
-.net-badge{margin-left:auto;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600}
-.net-positive{background:rgba(133,126,207,0.12);color:var(--accent1)}
-.net-negative{background:var(--pink-bg);color:var(--pink-text)}
-.net-zero{background:var(--bg2);color:var(--text3)}
-.ledger-tables{display:flex;flex-direction:column;gap:12px}
-.ledger-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
-.ledger-card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.ledger-card-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em}
-.ledger-total{font-size:16px;font-weight:600;color:var(--accent1)}
-.ledger-total.pink-total{color:var(--pink-text)}
-table.ledger-tbl{width:100%;border-collapse:collapse;font-size:13px}
-table.ledger-tbl th{background:var(--bg);color:var(--text3);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
-table.ledger-tbl th:last-child{text-align:right;width:36px}
-table.ledger-tbl td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
-table.ledger-tbl tr:last-child td{border-bottom:none}
-table.ledger-tbl tr:hover td{background:rgba(133,126,207,0.025)}
-.ledger-input{background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:16px;font-family:inherit;color:var(--text1);width:100%;outline:none;transition:border-color 0.15s,background 0.15s}
-.ledger-input:hover{border-color:var(--border2);background:rgba(133,126,207,0.03)}
-.ledger-input:focus{border-color:var(--accent2);background:rgba(133,126,207,0.07)}
-.ledger-input.amount-input{text-align:right}
-.btn-del{background:none;border:none;cursor:pointer;color:var(--text3);border-radius:6px;padding:4px 6px;font-size:15px;line-height:1;transition:color 0.15s,background 0.15s;font-family:inherit}
-.btn-del:hover{color:var(--pink-text);background:var(--pink-bg)}
-.btn-add-row{width:100%;padding:9px;background:none;border:none;cursor:pointer;color:var(--accent2);font-size:12px;font-weight:500;font-family:inherit;text-align:center;border-top:1px solid var(--border);transition:background 0.15s,color 0.15s}
-.btn-add-row:hover{background:rgba(133,126,207,0.05);color:var(--accent1)}
+    .topbar-sub {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
 
-/* HOME SETTLE PREVIEW */
-.settle-preview{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
-.settle-preview-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
-.settle-preview-row:last-child{border-bottom:none}
-.settle-preview-label{color:var(--text2)}
-.settle-preview-val{font-weight:600;color:var(--accent1)}
-.settle-preview-val.pink-val{color:var(--pink-text)}
-.divider{height:1px;background:var(--border);margin:4px 0}
+    .avatars {
+      display: flex;
+      gap: 8px;
+    }
 
-/* PAGE TITLE */
-.page-title{padding:16px 0 4px}
-.page-title h2{font-size:22px;font-weight:300;color:var(--text1);letter-spacing:-0.02em}
-.page-title p{font-size:12px;color:var(--text3);margin-top:2px}
+    .av {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      border: 2px solid var(--white);
+      box-shadow: var(--shadow);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* SIGN-IN OVERLAY */
-#signin-overlay{position:fixed;inset:0;z-index:2000;background:linear-gradient(135deg,var(--bg) 0%,var(--bg2) 50%,var(--accent3) 100%);display:flex;align-items:center;justify-content:center;padding:20px}
-.signin-card{background:#fff;border-radius:24px;padding:40px 28px;text-align:center;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(133,126,207,0.18)}
-.signin-icon{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 20px}
-.signin-title{font-size:28px;font-weight:300;color:var(--text1);letter-spacing:-0.02em;margin-bottom:6px}
-.signin-sub{font-size:12px;color:var(--text3);margin-bottom:32px;line-height:1.6}
-.signin-note{font-size:11px;color:var(--text3);margin-top:20px;line-height:1.5}
-.who-row{display:flex;gap:14px;justify-content:center;margin-bottom:4px}
-.who-btn{flex:1;padding:20px 12px;border:2px solid var(--border2);border-radius:18px;background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px}
-.who-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
-.who-btn.who-dane{border-color:rgba(133,126,207,0.25)}
-.who-btn.who-dane:hover{border-color:var(--accent1);background:rgba(133,126,207,0.05)}
-.who-btn.who-shizu{border-color:rgba(234,160,176,0.3)}
-.who-btn.who-shizu:hover{border-color:var(--pink);background:var(--pink-bg)}
-.who-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;box-shadow:var(--shadow2)}
-.who-av-d{background:linear-gradient(135deg,var(--accent2),var(--accent1))}
-.who-av-s{background:linear-gradient(135deg,var(--pink),#E594A5)}
-.who-name{font-size:15px;font-weight:600;color:var(--text1)}
-.who-sub{font-size:11px;color:var(--text3)}
+    .av-d {
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+      color: #fff;
+    }
 
-/* SYNC STATUS */
-.sync-pill{font-size:10px;font-weight:600;letter-spacing:0.04em;padding:4px 10px;border-radius:20px;transition:all 0.3s;white-space:nowrap}
-.sync-ok{background:rgba(34,197,94,0.12);color:#16a34a}
-.sync-pending{background:rgba(234,179,8,0.15);color:#b45309}
-.sync-offline{background:rgba(156,163,175,0.2);color:var(--text3)}
-.topbar-right{display:flex;align-items:center;gap:8px}
-.signout-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:inherit;padding:4px 8px;border-radius:8px;transition:color 0.15s,background 0.15s}
-.signout-btn:hover{color:var(--accent1);background:var(--bg2)}
+    .av-s {
+      background: linear-gradient(135deg, var(--pink), #C37A6F);
+      color: #fff;
+    }
 
-/* MONTH CARD FORM */
-.ours-month-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
-.month-card-header{padding:16px 20px;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:space-between}
-.month-card-title{font-size:15px;font-weight:600;letter-spacing:-0.01em}
-.month-card-net{font-size:20px;font-weight:600}
-.month-card-body{padding:16px 20px}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field-group{background:var(--bg);border-radius:var(--r2);padding:10px 14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:3px;transition:border-color 0.15s,background-color 0.15s}
-.field-group:focus-within{border-color:var(--accent2);background:var(--white);box-shadow:0 0 0 3px rgba(118,148,125,0.08)}
-.field-group.full-width{grid-column:span 2}
-.field-group label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
-.card-input{background:transparent;border:none;outline:none;font-size:16px;font-weight:600;color:var(--text1);font-family:inherit;width:100%;text-align:right}
-.input-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:8px 0 6px}
+    /* OFFLINE PILL */
+    #offline-pill {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text1);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 20px;
+      z-index: 300;
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-/* MONTH TAB BAR */
-.month-bar-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px 14px;padding:0 16px}
-.month-bar-wrap::-webkit-scrollbar{display:none}
-.month-bar{display:flex;gap:6px;width:max-content;padding-bottom:2px}
-.month-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--white);color:var(--text2);transition:all 0.18s;white-space:nowrap;font-family:inherit}
-.month-tab.active{background:var(--accent1);color:#fff;border-color:var(--accent1)}
+    body.offline #offline-pill {
+      display: block;
+    }
 
-/* ANNUAL SUMMARY */
-.annual-summary-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
-.summary-header-row{display:flex;justify-content:space-between;padding:10px 16px;background:var(--bg2);color:var(--text2);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
-.summary-body{display:flex;flex-direction:column}
-.summary-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;transition:background 0.15s}
-.summary-row:last-child{border-bottom:none}
-.summary-row:hover{background:var(--bg)}
-.summary-row.active{background:rgba(118,148,125,0.06)}
-.summary-row.active .summary-month{color:var(--accent1);font-weight:600}
-.summary-month{font-weight:500;color:var(--text2)}
-.summary-val{font-weight:600;color:var(--accent1)}
-.summary-val.negative{color:var(--pink-text)}
-.summary-footer-row{display:flex;justify-content:space-between;padding:12px 16px;background:var(--bg2);color:var(--accent1);font-weight:600;font-size:14px;border-top:1.5px solid var(--border2)}
-</style>
+    /* BOTTOM NAV - FLOATING */
+    .nav {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 448px;
+      height: var(--nav-h);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 100;
+      padding: 0 10px;
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(62, 90, 71, 0.08);
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding: 8px 20px;
+      border-radius: 16px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+
+    .nav-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .nav-btn:hover {
+      color: var(--text2);
+      background: rgba(62, 90, 71, 0.04);
+    }
+
+    .nav-btn.active {
+      color: var(--accent1);
+      background: var(--accent-light);
+    }
+
+    .nav-btn.active svg {
+      stroke: var(--accent1);
+      transform: translateY(-2px);
+    }
+
+    /* PAGES */
+    .page {
+      display: none;
+      padding: 0 16px 8px;
+      animation: pageFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes pageFade {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* YEAR TAB BAR */
+    .year-bar-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -16px 16px;
+      padding: 0 16px;
+    }
+
+    .year-bar-wrap::-webkit-scrollbar {
+      display: none;
+    }
+
+    .year-bar {
+      display: flex;
+      gap: 8px;
+      width: max-content;
+      padding: 2px 0;
+    }
+
+    .year-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--text2);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      font-family: 'Outfit', sans-serif;
+      box-shadow: var(--shadow);
+    }
+
+    .year-tab.active {
+      background: var(--accent1);
+      color: #fff;
+      border-color: var(--accent1);
+      box-shadow: 0 4px 12px var(--accent1-glow);
+    }
+
+    .year-tab.add-btn {
+      background: var(--bg2);
+      color: var(--accent1);
+      border-color: var(--border2);
+      font-size: 14px;
+      padding: 7px 14px;
+    }
+
+    .year-tab.add-btn:hover {
+      background: var(--accent1);
+      color: #fff;
+      border-color: var(--accent1);
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--accent1) 0%, var(--accent2) 50%, var(--pink) 100%);
+      border-radius: var(--r);
+      padding: 28px 24px;
+      margin: 16px 0 20px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(62, 90, 71, 0.15);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+      filter: blur(8px);
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      left: 15%;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+      filter: blur(5px);
+    }
+
+    .hero-label {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.85;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .hero-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 40px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .hero-amount span {
+      font-size: 20px;
+      font-weight: 400;
+      opacity: 0.8;
+      margin-right: 2px;
+    }
+
+    .hero-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 18px;
+    }
+
+    .hero-stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .hero-stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* CARDS */
+    .scard {
+      background: var(--white);
+      border-radius: var(--r2);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+
+    .scard-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .scard-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text1);
+      letter-spacing: -0.02em;
+    }
+
+    .scard-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    .scard.accent {
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      border-color: transparent;
+    }
+
+    .scard.accent .scard-label,
+    .scard.accent .scard-val,
+    .scard.accent .scard-sub {
+      color: #fff;
+    }
+
+    .scard.accent .scard-label {
+      opacity: 0.8;
+    }
+
+    .scard.pink {
+      background: var(--pink-bg);
+      border-color: rgba(211, 142, 130, 0.18);
+    }
+
+    .scard.pink .scard-val {
+      color: var(--pink-text);
+    }
+
+    /* SEC LABEL */
+    .sec-label {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 24px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* INPUT FIELD WRAPPERS & STYLING */
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: #F1F4F2;
+      border: 1.5px solid transparent;
+      border-radius: var(--r2);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .input-wrapper:focus-within {
+      background: var(--white);
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(62, 90, 71, 0.1);
+    }
+
+    .currency-prefix {
+      position: absolute;
+      left: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text3);
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .input-wrapper:focus-within .currency-prefix {
+      color: var(--accent1);
+    }
+
+    .card-input, .balance-input, #modal-amount {
+      width: 100%;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 10px 14px 10px 26px !important;
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      color: var(--text1) !important;
+      text-align: right !important;
+      outline: none !important;
+      font-family: 'Outfit', sans-serif !important;
+      box-shadow: none !important;
+      -webkit-appearance: none;
+    }
+
+    /* SPREADSHEET TABLE */
+    .table-wrap {
+      background: var(--white);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      margin-bottom: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table.sheet {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 820px;
+      font-size: 12px;
+    }
+
+    table.sheet th {
+      background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+      color: var(--text2);
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 12px 10px;
+      text-align: center;
+      border-bottom: 1.5px solid var(--border2);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.sheet th:first-child {
+      text-align: left;
+      padding-left: 16px;
+      min-width: 52px;
+    }
+
+    table.sheet th:last-child {
+      border-right: none;
+    }
+
+    table.sheet td {
+      padding: 6px 4px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    table.sheet td:first-child {
+      text-align: left;
+      padding-left: 16px;
+      font-weight: 600;
+      color: var(--accent1);
+      font-size: 12px;
+      white-space: nowrap;
+      background: linear-gradient(90deg, rgba(62, 90, 71, 0.04), transparent);
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      min-width: 52px;
+    }
+
+    table.sheet td:last-child {
+      border-right: none;
+    }
+
+    table.sheet tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.sheet tr:hover td {
+      background: rgba(62, 90, 71, 0.02);
+    }
+
+    table.sheet tr.total-row td {
+      background: linear-gradient(180deg, var(--bg2), var(--bg));
+      font-weight: 600;
+      color: var(--accent1);
+      border-top: 1.5px solid var(--border2);
+      font-size: 11px;
+    }
+
+    td.row-total {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      color: var(--accent1);
+      font-size: 13px;
+      padding: 6px 12px;
+      min-width: 88px;
+      white-space: nowrap;
+    }
+
+    /* BALANCE FIELDS */
+    .balance-section {
+      margin-bottom: 20px;
+    }
+
+    .balance-total-card {
+      background: linear-gradient(135deg, var(--accent2) 0%, var(--accent1) 100%);
+      border-radius: var(--r);
+      padding: 18px 22px;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 24px rgba(62, 90, 71, 0.12);
+      margin-bottom: 12px;
+    }
+
+    .balance-total-label {
+      font-size: 11px;
+      opacity: 0.9;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .balance-total-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .balance-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .balance-field {
+      flex: 1;
+      min-width: 180px;
+      background: var(--white);
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .balance-field label {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* SETTLE */
+    .person-block {
+      margin-bottom: 20px;
+    }
+
+    .person-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .person-av {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+    }
+
+    .av-shizu {
+      background: linear-gradient(135deg, var(--pink), #C37A6F);
+    }
+
+    .av-dane {
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+    }
+
+    .person-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text1);
+    }
+
+    .person-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    .net-badge {
+      margin-left: auto;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    .net-positive {
+      background: var(--accent-light);
+      color: var(--accent1);
+      border: 1px solid rgba(62, 90, 71, 0.12);
+    }
+
+    .net-negative {
+      background: var(--pink-bg);
+      color: var(--pink-text);
+      border: 1px solid rgba(211, 142, 130, 0.15);
+    }
+
+    .net-zero {
+      background: var(--bg2);
+      color: var(--text3);
+    }
+
+    .ledger-tables {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .ledger-card {
+      background: var(--white);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .ledger-card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FAFBF9;
+    }
+
+    .ledger-card-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+      letter-spacing: 0.04em;
+    }
+
+    .ledger-total {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent1);
+    }
+
+    .ledger-total.pink-total {
+      color: var(--pink-text);
+    }
+
+    table.ledger-tbl th {
+      background: var(--bg);
+      color: var(--text3);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.ledger-tbl th:last-child {
+      text-align: right;
+      width: 36px;
+    }
+
+    table.ledger-tbl td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    table.ledger-tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.ledger-tbl tr:hover td {
+      background: rgba(62, 90, 71, 0.01);
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      border-radius: 6px;
+      padding: 4px 6px;
+      font-size: 16px;
+      line-height: 1;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-del:hover {
+      color: var(--pink-text);
+      background: var(--pink-bg);
+    }
+
+    .btn-add-row {
+      width: 100%;
+      padding: 12px;
+      background: #FAFBF9;
+      border: none;
+      cursor: pointer;
+      color: var(--accent1);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn-add-row:hover {
+      background: var(--accent-light);
+      color: var(--accent1);
+    }
+
+    /* HOME SETTLE PREVIEW */
+    .settle-preview {
+      background: var(--white);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .settle-preview-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .settle-preview-row:last-child {
+      border-bottom: none;
+    }
+
+    .settle-preview-label {
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .settle-preview-val {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      color: var(--accent1);
+      font-size: 15px;
+    }
+
+    .settle-preview-val.pink-val {
+      color: var(--pink-text);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 0;
+    }
+
+    /* PAGE TITLE */
+    .page-title {
+      padding: 20px 0 6px;
+    }
+
+    .page-title h2 {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text1);
+      letter-spacing: -0.01em;
+    }
+
+    .page-title p {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* SIGN-IN OVERLAY */
+    #signin-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 50%, var(--accent-light) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .signin-card {
+      background: #fff;
+      border-radius: 28px;
+      padding: 44px 32px;
+      text-align: center;
+      width: 100%;
+      max-width: 350px;
+      box-shadow: 0 25px 60px rgba(62, 90, 71, 0.12);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .signin-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #fff;
+      margin: 0 auto 24px;
+      box-shadow: 0 10px 20px var(--accent1-glow);
+    }
+
+    .signin-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text1);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .signin-sub {
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .signin-note {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 24px;
+      line-height: 1.5;
+    }
+
+    .who-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .who-btn {
+      flex: 1;
+      padding: 24px 12px 18px;
+      border: 2px solid var(--border2);
+      border-radius: 20px;
+      background: var(--bg);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .who-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow2);
+    }
+
+    .who-btn.who-dane {
+      border-color: rgba(62, 90, 71, 0.2);
+    }
+
+    .who-btn.who-dane:hover {
+      border-color: var(--accent1);
+      background: var(--accent-light);
+    }
+
+    .who-btn.who-shizu {
+      border-color: rgba(211, 142, 130, 0.2);
+    }
+
+    .who-btn.who-shizu:hover {
+      border-color: var(--pink);
+      background: var(--pink-bg);
+    }
+
+    .who-av {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .who-av-d {
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+    }
+
+    .who-av-s {
+      background: linear-gradient(135deg, var(--pink), #C37A6F);
+    }
+
+    .who-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text1);
+    }
+
+    .who-sub {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 500;
+    }
+
+    /* SYNC STATUS */
+    .sync-pill {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 5px 12px;
+      border-radius: 20px;
+      transition: all 0.3s;
+      white-space: nowrap;
+      box-shadow: var(--shadow);
+    }
+
+    .sync-ok {
+      background: rgba(34, 197, 94, 0.08);
+      color: #15803d;
+      border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .sync-pending {
+      background: rgba(234, 179, 8, 0.1);
+      color: #a16207;
+      border: 1px solid rgba(234, 179, 8, 0.2);
+    }
+
+    .sync-offline {
+      background: rgba(117, 135, 123, 0.1);
+      color: var(--text2);
+      border: 1px solid rgba(117, 135, 123, 0.2);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .signout-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      font-size: 14px;
+      font-family: inherit;
+      padding: 6px 10px;
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+
+    .signout-btn:hover {
+      color: var(--accent1);
+      background: var(--bg2);
+    }
+
+    /* LANGUAGE TOGGLE BUTTON */
+    .lang-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border2);
+      background: var(--white);
+      color: var(--accent1);
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      box-shadow: var(--shadow);
+    }
+
+    .lang-btn:hover {
+      background: var(--accent1);
+      color: #fff;
+      border-color: var(--accent1);
+      box-shadow: 0 4px 12px var(--accent1-glow);
+      transform: translateY(-1px);
+    }
+
+    .lang-btn:active {
+      transform: translateY(0);
+    }
+
+
+    /* MONTH CARD FORM */
+    .ours-month-card {
+      background: var(--white);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .month-card-header {
+      padding: 18px 22px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 15px var(--accent1-glow);
+    }
+
+    .month-card-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .month-card-net {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .month-card-body {
+      padding: 20px 22px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field-group {
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-group.full-width {
+      grid-column: span 2;
+    }
+
+    .field-group label {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .input-section-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 16px 0 8px;
+    }
+
+    /* MONTH TAB BAR */
+    .month-bar-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -16px 16px;
+      padding: 0 16px;
+    }
+
+    .month-bar-wrap::-webkit-scrollbar {
+      display: none;
+    }
+
+    .month-bar {
+      display: flex;
+      gap: 8px;
+      width: max-content;
+      padding: 2px 0;
+    }
+
+    .month-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--text2);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+      font-family: inherit;
+      box-shadow: var(--shadow);
+    }
+
+    .month-tab.active {
+      background: var(--accent1);
+      color: #fff;
+      border-color: var(--accent1);
+      box-shadow: 0 4px 12px var(--accent1-glow);
+    }
+
+    /* ANNUAL SUMMARY */
+    .annual-summary-card {
+      background: var(--white);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .summary-header-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: var(--bg2);
+      color: var(--text2);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-row:hover {
+      background: var(--bg);
+    }
+
+    .summary-row.active {
+      background: var(--accent-light);
+    }
+
+    .summary-row.active .summary-month {
+      color: var(--accent1);
+      font-weight: 700;
+    }
+
+    .summary-month {
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .summary-val {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      color: var(--accent1);
+    }
+
+    .summary-val.negative {
+      color: var(--pink-text);
+    }
+
+    .summary-footer-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--bg2);
+      color: var(--accent1);
+      font-weight: 700;
+      font-size: 15px;
+      border-top: 1.5px solid var(--border2);
+    }
+
+    #annual-summary-grand {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* SETTLEMENT OVERVIEW CARD */
+    .settle-summary-card {
+      background: var(--white);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .settle-summary-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .settle-summary-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .settle-summary-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text1);
+    }
+
+    /* LEDGER LIST & ITEMS */
+    .ledger-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ledger-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ledger-item:last-child {
+      border-bottom: none;
+    }
+
+    .ledger-item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ledger-item-date {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 500;
+    }
+
+    .ledger-item-purpose {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ledger-item-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ledger-item-amount {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent1);
+      white-space: nowrap;
+    }
+
+    .btn-del-item {
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-del-item:hover {
+      color: var(--pink-text);
+      background: var(--pink-bg);
+    }
+
+    .member-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .badge-dane {
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+    }
+
+    .badge-shizu {
+      background: linear-gradient(135deg, var(--pink), #C37A6F);
+    }
+
+    .ledger-empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* MODAL OVERLAY - Bottom Sheet on Mobile */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-card {
+      background: var(--white);
+      border-radius: var(--r);
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow-large);
+      overflow: hidden;
+      animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid var(--border);
+    }
+
+    @keyframes modalSlide {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+      }
+
+      .modal-card {
+        max-width: 100%;
+        border-radius: 24px 24px 0 0;
+        animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .modal-card::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: var(--bg2);
+        border-radius: 2px;
+        margin: 12px auto 0;
+      }
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text1);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--text3);
+      padding: 6px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--text1);
+    }
+
+    .modal-body {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group input[type="date"],
+    .form-group input[type="text"] {
+      background: #F1F4F2;
+      border: 1.5px solid transparent;
+      border-radius: var(--r2);
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text1);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-group input[type="date"]:focus,
+    .form-group input[type="text"]:focus {
+      border-color: var(--accent2);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(62, 90, 71, 0.1);
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text2);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent1);
+      color: #fff;
+      border-color: var(--accent1);
+      box-shadow: 0 4px 10px var(--accent1-glow);
+    }
+
+    .modal-footer {
+      padding: 16px 22px;
+      background: #FAFBF9;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn-cancel {
+      background: none;
+      border: none;
+      color: var(--text2);
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: var(--r2);
+      transition: background 0.2s;
+    }
+
+    .modal-btn-cancel:hover {
+      background: var(--bg2);
+    }
+
+    .modal-btn-save {
+      background: var(--accent1);
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: var(--r2);
+      box-shadow: 0 4px 12px var(--accent1-glow);
+      transition: all 0.2s;
+    }
+
+    .modal-btn-save:hover {
+      background: var(--accent2);
+    }
+
+    /* Swipe Transitions */
+    @keyframes swipeOutLeft {
+      0% { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0; transform: translateX(-40px); }
+    }
+    @keyframes swipeInRight {
+      0% { opacity: 0; transform: translateX(40px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes swipeOutRight {
+      0% { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0; transform: translateX(40px); }
+    }
+    @keyframes swipeInLeft {
+      0% { opacity: 0; transform: translateX(-40px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    .swipe-out-left {
+      animation: swipeOutLeft 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .swipe-in-right {
+      animation: swipeInRight 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .swipe-out-right {
+      animation: swipeOutRight 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .swipe-in-left {
+      animation: swipeInLeft 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* ── YEAR SELECTOR DROPDOWN ──────────────────────────── */
+    .year-select-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .year-select-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      border: 1.5px solid var(--border2);
+      border-radius: 30px;
+      padding: 9px 16px 9px 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent1);
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(62, 90, 71, 0.06);
+      letter-spacing: -0.01em;
+    }
+
+    .year-select-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent2);
+    }
+
+    .year-select-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent2);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .year-select-btn.open svg {
+      transform: rotate(180deg);
+    }
+
+    .year-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--white);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      box-shadow: 0 12px 36px rgba(62, 90, 71, 0.12), 0 2px 8px rgba(62, 90, 71, 0.06);
+      z-index: 300;
+      min-width: 140px;
+      overflow: hidden;
+      animation: dropdownIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes dropdownIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .year-dropdown.open {
+      display: block;
+    }
+
+    .year-dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text1);
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .year-dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .year-dropdown-item:hover {
+      background: var(--bg);
+    }
+
+    .year-dropdown-item.active {
+      color: var(--accent1);
+      background: var(--accent-light);
+    }
+
+    .year-dropdown-item.active::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      background: var(--accent1);
+      border-radius: 50%;
+    }
+
+    .year-dropdown-add {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.15s;
+      background: #FAFBF9;
+      border-top: 1px solid var(--border);
+    }
+
+    .year-dropdown-add:hover {
+      color: var(--accent1);
+      background: var(--accent-light);
+    }
+
+    /* ── MONTH NAVIGATOR ─────────────────────────────────── */
+    .month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 4px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      user-select: none;
+    }
+
+    .month-nav-arrow {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      font-size: 22px;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .month-nav-arrow:hover {
+      background: var(--accent-light);
+      color: var(--accent1);
+    }
+
+    .month-nav-arrow:disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    .month-nav-arrow:disabled:hover {
+      background: transparent;
+      color: var(--text2);
+    }
+
+    .month-nav-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+
+    .month-nav-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent1);
+      letter-spacing: 0.02em;
+    }
+
+    .month-nav-dots {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .month-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border2);
+      transition: all 0.2s;
+    }
+
+    .month-dot.active {
+      width: 18px;
+      border-radius: 3px;
+      background: var(--accent1);
+    }
+
+    /* ── LANGUAGE BUTTON ─────────────────────────────────── */
+    .lang-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1.5px solid var(--border2);
+      color: var(--accent1);
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      padding: 0;
+      outline: none;
+    }
+
+    .lang-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent2);
+      transform: scale(1.05);
+    }
+  </style>
 </head>
+
 <body>
-<div id="offline-pill">オフライン Offline</div>
+  <div id="offline-pill" data-t="offline">オフライン Offline</div>
 
-<!-- SIGN-IN OVERLAY -->
-<div id="signin-overlay">
-  <div class="signin-card">
-    <div class="signin-icon">家</div>
-    <h1 class="signin-title">家計簿</h1>
-    <p class="signin-sub">Household Finance<br>どちらですか？ Who are you?</p>
-    <div class="who-row">
-      <button class="who-btn who-dane" onclick="chooseUser('dane')">
-        <div class="who-av who-av-d">D</div>
-        <div class="who-name">Dane</div>
-        <div class="who-sub">夫 Husband</div>
-      </button>
-      <button class="who-btn who-shizu" onclick="chooseUser('shizu')">
-        <div class="who-av who-av-s">S</div>
-        <div class="who-name">Shizu</div>
-        <div class="who-sub">妻 Wife</div>
-      </button>
-    </div>
-    <p class="signin-note">次回から自動でサインイン · Auto-signs in next time</p>
-  </div>
-</div>
-
-<div id="install-banner">
-  <span>📲 ホーム画面に追加してオフラインで使えます</span>
-  <button id="install-btn">インストール</button>
-  <button class="dismiss" id="dismiss-btn" aria-label="閉じる">✕</button>
-</div>
-
-<div id="app" style="display:none">
-
-  <div class="topbar">
-    <div>
-      <div class="topbar-logo">家計簿</div>
-      <div class="topbar-sub">Household Finance</div>
-    </div>
-    <div class="topbar-right">
-      <span id="sync-status" class="sync-pill sync-offline">⏳ 接続中</span>
-      <div class="avatars">
-        <div class="av av-d" title="Dane">D</div>
-        <div class="av av-s" title="Shizu">S</div>
+  <!-- SIGN-IN OVERLAY -->
+  <div id="signin-overlay">
+    <div class="signin-card">
+      <button class="lang-btn" onclick="toggleLanguage()" id="signin-lang-btn" style="position: absolute; top: 16px; right: 16px;">EN</button>
+      <div class="signin-icon">家</div>
+      <h1 class="signin-title" data-t="logo">家計簿</h1>
+      <p class="signin-sub" data-t="whoTitle">どちらですか？ Who are you?</p>
+      <div class="who-row">
+        <button class="who-btn who-dane" onclick="chooseUser('dane')">
+          <div class="who-av who-av-d">D</div>
+          <div class="who-name">Dane</div>
+          <div class="who-sub" data-t="husband">夫 Husband</div>
+        </button>
+        <button class="who-btn who-shizu" onclick="chooseUser('shizu')">
+          <div class="who-av who-av-s">S</div>
+          <div class="who-name">Shizu</div>
+          <div class="who-sub" data-t="wife">妻 Wife</div>
+        </button>
       </div>
-      <button class="signout-btn" onclick="signOut()" title="Sign out">↩</button>
+      <p class="signin-note" data-t="autoSignin">次回から自動でサインイン · Auto-signs in next time</p>
     </div>
   </div>
 
-  <div class="main-scroll">
+  <div id="install-banner">
+    <span data-t="installBanner">📲 ホーム画面に追加してオフラインで使えます</span>
+    <button id="install-btn" data-t="installBtn">インストール</button>
+    <button class="dismiss" id="dismiss-btn" aria-label="閉じる">✕</button>
+  </div>
 
-    <!-- HOME -->
-    <div class="page active" id="page-home">
-      <div class="hero">
-        <div class="hero-label">総資産 Total Assets</div>
-        <div class="hero-amount" id="hero-total"><span>¥</span>—</div>
-        <div class="hero-row">
-          <div class="hero-stat">
-            <div class="hero-stat-label">楽天銀行</div>
-            <div class="hero-stat-val" id="home-bank">—</div>
-          </div>
-          <div class="hero-stat">
-            <div class="hero-stat-label">現金</div>
-            <div class="hero-stat-val" id="home-cash">—</div>
-          </div>
-          <div class="hero-stat">
-            <div class="hero-stat-label">年度</div>
-            <div class="hero-stat-val" id="home-year">—</div>
-          </div>
-        </div>
+  <div id="app" style="display:none">
+
+    <div class="topbar">
+      <div>
+        <div class="topbar-logo" data-t="logo">家計簿</div>
+        <div class="topbar-sub" data-t="logoSub">Household Finance</div>
       </div>
-
-      <div class="sec-label">精算サマリー Settlement</div>
-      <div class="settle-preview" id="home-settle"></div>
-
-      <div class="sec-label">直近入力月 Latest Month</div>
-      <div class="cards3" id="home-month-cards"></div>
-    </div>
-
-    <!-- OURS -->
-    <div class="page" id="page-ours">
-      <div class="page-title">
-        <h2>OURS <span style="color:var(--accent2)">家計</span></h2>
-        <p>Shared wallet · all years</p>
-      </div>
-
-      <!-- BALANCE SECTION AT THE TOP -->
-      <div class="balance-section">
-        <div class="balance-total-card">
-          <div class="balance-total-label">残高合計 Total Balance</div>
-          <div class="balance-total-val" id="ours-balance-total">¥0</div>
+      <div class="topbar-right">
+        <span id="sync-status" class="sync-pill sync-offline">⏳ 接続中</span>
+        <button class="lang-btn lang-toggle-btn" onclick="toggleLanguage()">EN</button>
+        <div class="avatars">
+          <div class="av av-d" title="Dane">D</div>
+          <div class="av av-s" title="Shizu">S</div>
         </div>
-        <div class="balance-row">
-          <div class="balance-field">
-            <label for="rakuten-bal">楽天銀行残高</label>
-            <input class="balance-input" id="rakuten-bal" type="text" placeholder="¥0">
-          </div>
-          <div class="balance-field">
-            <label for="wallet-bal">アワーワレット現金</label>
-            <input class="balance-input" id="wallet-bal" type="text" placeholder="¥0">
-          </div>
-        </div>
-      </div>
-
-      <div class="year-bar-wrap" id="ours-year-bar-wrap">
-        <div class="year-bar" id="ours-year-bar"></div>
-      </div>
-
-      <!-- MONTH TAB BAR -->
-      <div class="month-bar-wrap">
-        <div class="month-bar" id="ours-month-bar"></div>
-      </div>
-
-      <!-- MONTH CARD FORM -->
-      <div class="ours-month-card">
-        <div class="month-card-header">
-          <div class="month-card-title" id="ours-month-title">—</div>
-          <div class="month-card-net" id="ours-month-net">—</div>
-        </div>
-        <div class="month-card-body">
-          <div class="input-section-title">拠出 Contribution</div>
-          <div class="grid-2">
-            <div class="field-group">
-              <label for="inp-dane">Dane</label>
-              <input type="text" class="card-input" id="inp-dane" placeholder="¥0">
-            </div>
-            <div class="field-group">
-              <label for="inp-shizu">Shizu</label>
-              <input type="text" class="card-input" id="inp-shizu" placeholder="¥0">
-            </div>
-          </div>
-          
-          <div class="input-section-title" style="margin-top:16px">支出 Expenses</div>
-          <div class="grid-2">
-            <div class="field-group">
-              <label for="inp-elec">電気</label>
-              <input type="text" class="card-input" id="inp-elec" placeholder="¥0">
-            </div>
-            <div class="field-group">
-              <label for="inp-water">水道</label>
-              <input type="text" class="card-input" id="inp-water" placeholder="¥0">
-            </div>
-            <div class="field-group">
-              <label for="inp-net">インターネット</label>
-              <input type="text" class="card-input" id="inp-net" placeholder="¥0">
-            </div>
-            <div class="field-group">
-              <label for="inp-food">食費</label>
-              <input type="text" class="card-input" id="inp-food" placeholder="¥0">
-            </div>
-            <div class="field-group">
-              <label for="inp-misc">その他</label>
-              <input type="text" class="card-input" id="inp-misc" placeholder="¥0">
-            </div>
-            <div class="field-group">
-              <label for="inp-car">車検イヴ</label>
-              <input type="text" class="card-input" id="inp-car" placeholder="¥0">
-            </div>
-          </div>
-          <div class="field-group full-width" style="margin-top:10px">
-            <label for="inp-rakuten">楽天クレジット</label>
-            <input type="text" class="card-input" id="inp-rakuten" placeholder="¥0">
-          </div>
-        </div>
-      </div>
-
-      <!-- ANNUAL SUMMARY -->
-      <div class="sec-label">年間サマリー Annual Summary</div>
-      <div class="annual-summary-card">
-        <div class="summary-header-row">
-          <div>月</div>
-          <div>収支合計</div>
-        </div>
-        <div class="summary-body" id="annual-summary-list"></div>
-        <div class="summary-footer-row" id="annual-summary-footer">
-          <div>合計</div>
-          <div id="annual-summary-grand">—</div>
-        </div>
+        <button class="signout-btn" onclick="signOut()" title="Sign out">↩</button>
       </div>
     </div>
 
-    <!-- SETTLE -->
-    <div class="page" id="page-settle">
-      <div class="page-title">
-        <h2>精算管理 <span style="color:var(--accent2)">Settlement</span></h2>
-        <p>Who owes whom</p>
-      </div>
+    <div class="main-scroll">
 
-      <div class="year-bar-wrap" id="settle-year-bar-wrap">
-        <div class="year-bar" id="settle-year-bar"></div>
-      </div>
-
-      <!-- SHIZU -->
-      <div class="person-block">
-        <div class="person-header">
-          <div class="person-av av-shizu">S</div>
-          <div>
-            <div class="person-name">Shizu</div>
-            <div class="person-sub">妻 Wife</div>
+      <!-- HOME -->
+      <div class="page active" id="page-home">
+        <div class="hero">
+          <div class="hero-label" data-t="totalAssets">総資産 Total Assets</div>
+          <div class="hero-amount" id="hero-total"><span>¥</span>—</div>
+          <div class="hero-row">
+            <div class="hero-stat">
+              <div class="hero-stat-label" data-t="rakutenBank">楽天銀行</div>
+              <div class="hero-stat-val" id="home-bank">—</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label" data-t="cash">現金</div>
+              <div class="hero-stat-val" id="home-cash">—</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-label" data-t="yearLabel">年度</div>
+              <div class="hero-stat-val" id="home-year">—</div>
+            </div>
           </div>
-          <div class="net-badge net-zero" id="shizu-net-badge">Net ¥0</div>
         </div>
+
+        <div class="sec-label" data-t="settleSummary">精算サマリー Settlement</div>
+        <div class="settle-preview" id="home-settle"></div>
+
+      </div>
+
+      <!-- OURS -->
+      <div class="page" id="page-ours">
+        <div class="page-title">
+          <h2 data-t="oursTitle">OURS <span style="color:var(--accent2)">家計</span></h2>
+          <p data-t="oursSub">Shared wallet · all years</p>
+        </div>
+
+        <!-- YEAR SELECTOR -->
+        <div class="year-select-row">
+          <button class="year-select-btn" id="ours-year-btn" onclick="toggleYearDropdown('ours')">
+            <span id="ours-year-label">—</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="year-dropdown" id="ours-year-dropdown"></div>
+        </div>
+
+        <!-- BALANCE SECTION AT THE TOP -->
+        <div class="balance-section">
+          <div class="balance-total-card">
+            <div class="balance-total-label" data-t="totalBalance">残高合計 Total Balance</div>
+            <div class="balance-total-val" id="ours-balance-total">¥0</div>
+          </div>
+          <div class="balance-row">
+            <div class="balance-field">
+              <label for="rakuten-bal" data-t="rakutenBal">楽天銀行残高</label>
+              <div class="input-wrapper">
+                <span class="currency-prefix">¥</span>
+                <input class="balance-input" id="rakuten-bal" type="text" placeholder="0" inputmode="numeric">
+              </div>
+            </div>
+            <div class="balance-field">
+              <label for="wallet-bal" data-t="walletBal">アワーワレット現金</label>
+              <div class="input-wrapper">
+                <span class="currency-prefix">¥</span>
+                <input class="balance-input" id="wallet-bal" type="text" placeholder="0" inputmode="numeric">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MONTH NAVIGATOR -->
+        <div class="month-nav">
+          <button class="month-nav-arrow" id="month-prev-btn" onclick="goToPrevMonth()" aria-label="前の月">&#8249;</button>
+          <div class="month-nav-center">
+            <div class="month-nav-name" id="ours-month-nav-name">—</div>
+            <div class="month-nav-dots" id="ours-month-dots"></div>
+          </div>
+          <button class="month-nav-arrow" id="month-next-btn" onclick="goToNextMonth()" aria-label="次の月">&#8250;</button>
+        </div>
+
+        <!-- MONTH CARD FORM -->
+        <div class="ours-month-card">
+          <div class="month-card-header">
+            <div class="month-card-title" id="ours-month-title">—</div>
+            <div class="month-card-net" id="ours-month-net">—</div>
+          </div>
+          <div class="month-card-body">
+            <div class="input-section-title" data-t="contribution">拠出 Contribution</div>
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="inp-dane">Dane</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-dane" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inp-shizu">Shizu</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-shizu" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+            </div>
+
+            <div class="input-section-title" style="margin-top:16px" data-t="expenses">支出 Expenses</div>
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="inp-elec" data-t="elec">電気</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-elec" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inp-water" data-t="water">水道</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-water" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inp-net" data-t="net">インターネット</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-net" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inp-food" data-t="food">食費</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-food" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inp-misc" data-t="misc">日用品・その他</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-misc" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inp-car" data-t="car">車検・自動車税・イヴ</label>
+                <div class="input-wrapper">
+                  <span class="currency-prefix">¥</span>
+                  <input type="text" class="card-input" id="inp-car" placeholder="0" inputmode="numeric">
+                </div>
+              </div>
+            </div>
+            <div class="field-group full-width" style="margin-top:10px">
+              <label for="inp-rakuten" data-t="rakutenCard">楽天クレジット</label>
+              <div class="input-wrapper">
+                <span class="currency-prefix">¥</span>
+                <input type="text" class="card-input" id="inp-rakuten" placeholder="0" inputmode="numeric">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANNUAL SUMMARY -->
+        <div class="sec-label" data-t="annualSummary">年間サマリー Annual Summary</div>
+        <div class="annual-summary-card">
+          <div class="summary-header-row">
+            <div data-t="colMonth">月</div>
+            <div data-t="colNet">収支合計</div>
+          </div>
+          <div class="summary-body" id="annual-summary-list"></div>
+          <div class="summary-footer-row" id="annual-summary-footer">
+            <div data-t="colTotal">合計</div>
+            <div id="annual-summary-grand">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTLE -->
+      <div class="page" id="page-settle">
+        <div class="page-title">
+          <h2 data-t="settleTitle">精算管理 <span style="color:var(--accent2)">Settlement</span></h2>
+          <p data-t="settleSub">Who owes whom</p>
+        </div>
+
+        <!-- YEAR SELECTOR -->
+        <div class="year-select-row">
+          <button class="year-select-btn" id="settle-year-btn" onclick="toggleYearDropdown('settle')">
+            <span id="settle-year-label">—</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="year-dropdown" id="settle-year-dropdown"></div>
+        </div>
+
+        <!-- NET SETTLEMENT OVERVIEW -->
+        <div class="settle-summary-card">
+          <div class="settle-summary-item">
+            <div class="av av-s" title="Shizu">S</div>
+            <div class="settle-summary-info">
+              <div class="settle-summary-name">Shizu</div>
+              <div class="net-badge net-zero" id="shizu-net-badge">Net ¥0</div>
+            </div>
+          </div>
+          <div class="settle-summary-item">
+            <div class="av av-d" title="Dane">D</div>
+            <div class="settle-summary-info">
+              <div class="settle-summary-name">Dane</div>
+              <div class="net-badge net-zero" id="dane-net-badge">Net ¥0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSACTION CARD BOXES -->
         <div class="ledger-tables">
+          <!-- O -> S -->
           <div class="ledger-card">
             <div class="ledger-card-header">
-              <div class="ledger-card-title">💳 Wallet → owes Shizu</div>
+              <div class="ledger-card-title" style="letter-spacing:0.04em; font-weight:600;">O ➔ S</div>
               <div class="ledger-total" id="wos-total">¥0</div>
             </div>
-            <table class="ledger-tbl">
-              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
-              <tbody id="wos-body"></tbody>
-            </table>
-            <button class="btn-add-row" onclick="addLedgerRow('wos')">＋ 行を追加 Add row</button>
+            <div class="ledger-list" id="wos-list"></div>
+            <button class="btn-add-row" onclick="openSettleModal('wos')" data-t="addBtn">＋ 追加 Add</button>
           </div>
+
+          <!-- O -> D -->
           <div class="ledger-card">
             <div class="ledger-card-header">
-              <div class="ledger-card-title">💸 Shizu → owes Wallet</div>
-              <div class="ledger-total pink-total" id="sow-total">¥0</div>
-            </div>
-            <table class="ledger-tbl">
-              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
-              <tbody id="sow-body"></tbody>
-            </table>
-            <button class="btn-add-row" onclick="addLedgerRow('sow')">＋ 行を追加 Add row</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="divider" style="margin:8px 0 20px"></div>
-
-      <!-- DANE -->
-      <div class="person-block">
-        <div class="person-header">
-          <div class="person-av av-dane">D</div>
-          <div>
-            <div class="person-name">Dane</div>
-            <div class="person-sub">夫 Husband</div>
-          </div>
-          <div class="net-badge net-zero" id="dane-net-badge">Net ¥0</div>
-        </div>
-        <div class="ledger-tables">
-          <div class="ledger-card">
-            <div class="ledger-card-header">
-              <div class="ledger-card-title">💳 Wallet → owes Dane</div>
+              <div class="ledger-card-title" style="letter-spacing:0.04em; font-weight:600;">O ➔ D</div>
               <div class="ledger-total" id="wod-total">¥0</div>
             </div>
-            <table class="ledger-tbl">
-              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
-              <tbody id="wod-body"></tbody>
-            </table>
-            <button class="btn-add-row" onclick="addLedgerRow('wod')">＋ 行を追加 Add row</button>
+            <div class="ledger-list" id="wod-list"></div>
+            <button class="btn-add-row" onclick="openSettleModal('wod')" data-t="addBtn">＋ 追加 Add</button>
           </div>
+
+          <!-- D/S -> O -->
           <div class="ledger-card">
             <div class="ledger-card-header">
-              <div class="ledger-card-title">💸 Dane → owes Wallet</div>
-              <div class="ledger-total pink-total" id="dow-total">¥0</div>
+              <div class="ledger-card-title" style="letter-spacing:0.04em; font-weight:600;">D/S ➔ O</div>
+              <div class="ledger-total pink-total" id="to-wallet-total">¥0</div>
             </div>
-            <table class="ledger-tbl">
-              <thead><tr><th>日付</th><th>理由 Purpose</th><th style="text-align:right">金額</th><th></th></tr></thead>
-              <tbody id="dow-body"></tbody>
-            </table>
-            <button class="btn-add-row" onclick="addLedgerRow('dow')">＋ 行を追加 Add row</button>
+            <div class="ledger-list" id="to-wallet-list"></div>
+            <button class="btn-add-row" onclick="openSettleModal('to-wallet')" data-t="addBtn">＋ 追加 Add</button>
           </div>
         </div>
       </div>
+
+    </div><!-- /main-scroll -->
+
+    <nav class="nav">
+      <button class="nav-btn active" onclick="switchPage('home',this)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" />
+          <path d="M9 21V12h6v9" />
+        </svg>
+        <span data-t="navHome">ホーム</span>
+      </button>
+      <button class="nav-btn" onclick="switchPage('ours',this)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18M3 15h18M9 3v18" />
+        </svg>
+        <span data-t="navOurs">OURS</span>
+      </button>
+      <button class="nav-btn" onclick="switchPage('settle',this)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 16l-4-4 4-4M17 8l4 4-4 4M14 4l-4 16" />
+        </svg>
+        <span data-t="navSettle">精算</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- SETTLEMENT MODAL -->
+  <div id="settle-modal" class="modal-overlay" style="display:none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title" data-t="addBtn">取引を追加 Add Transaction</h3>
+        <button class="modal-close" onclick="closeSettleModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Person Selector for D/S -> O -->
+        <div class="form-group" id="modal-who-group" style="display:none">
+          <label data-t="modalWho">誰が支払う？ Who pays/owes?</label>
+          <div class="toggle-group">
+            <button type="button" class="toggle-btn active" id="btn-who-dane" onclick="setModalWho('dane')">Dane (D ➔ O)</button>
+            <button type="button" class="toggle-btn" id="btn-who-shizu" onclick="setModalWho('shizu')">Shizu (S ➔ O)</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modal-date" data-t="modalDate">日付 Date</label>
+          <input type="date" id="modal-date">
+        </div>
+        <div class="form-group">
+          <label for="modal-purpose" data-t="modalPurpose">理由 Purpose</label>
+          <input type="text" id="modal-purpose" placeholder="理由 / Purpose">
+        </div>
+        <div class="form-group">
+          <label for="modal-amount" data-t="modalAmount">金額 Amount</label>
+          <div class="input-wrapper">
+            <span class="currency-prefix">¥</span>
+            <input type="text" id="modal-amount" placeholder="0" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-cancel" onclick="closeSettleModal()" data-t="modalCancel">キャンセル</button>
+        <button class="modal-btn-save" onclick="saveSettleModal()" data-t="modalSave">追加 Save</button>
+      </div>
     </div>
+  </div>
 
-  </div><!-- /main-scroll -->
+  <script>
+    // ─── FIREBASE CONFIG ─────────────────────────────────────────
+    // 👇 Replace with YOUR Firebase project config
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCSpoXh0XGFPe0iSyV_q4eS1uOv0F2EqCk",
+      authDomain: "kakeibo-82446.firebaseapp.com",
+      projectId: "kakeibo-82446",
+      storageBucket: "kakeibo-82446.firebasestorage.app",
+      messagingSenderId: "1084895914155",
+      appId: "1:1084895914155:web:aca4bf73e1dc29f1ee6fee"
+    };
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => { });
+    const DOC = db.collection('kakeibo').doc('shared');
 
-  <nav class="nav">
-    <button class="nav-btn active" onclick="switchPage('home',this)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
-      <span>ホーム</span>
-    </button>
-    <button class="nav-btn" onclick="switchPage('ours',this)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-      <span>OURS</span>
-    </button>
-    <button class="nav-btn" onclick="switchPage('settle',this)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 16l-4-4 4-4M17 8l4 4-4 4M14 4l-4 16"/></svg>
-      <span>精算</span>
-    </button>
-  </nav>
-</div>
+    // ─── CONSTANTS ───────────────────────────────────────────────
+    const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    const COLS = ['dane', 'shizu', 'elec', 'water', 'net', 'food', 'misc', 'car', 'rakuten'];
+    const START_YEAR = 2022;
+    const CURRENT_YEAR = new Date().getFullYear();
 
-<script>
-// ─── FIREBASE CONFIG ─────────────────────────────────────────
-// 👇 Replace with YOUR Firebase project config
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyCSpoXh0XGFPe0iSyV_q4eS1uOv0F2EqCk",
-  authDomain:        "kakeibo-82446.firebaseapp.com",
-  projectId:         "kakeibo-82446",
-  storageBucket:     "kakeibo-82446.firebasestorage.app",
-  messagingSenderId: "1084895914155",
-  appId:             "1:1084895914155:web:aca4bf73e1dc29f1ee6fee"
-};
-firebase.initializeApp(FIREBASE_CONFIG);
-const auth = firebase.auth();
-const db   = firebase.firestore();
-db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
-const DOC  = db.collection('kakeibo').doc('shared');
+    // ─── STATE ───────────────────────────────────────────────────
+    let years = [];
+    let oursData = {};
+    let balances = {};
+    let ledgers = {};
+    let _id = 1;
 
-// ─── CONSTANTS ───────────────────────────────────────────────
-const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const COLS   = ['dane','shizu','elec','water','net','food','misc','car','rakuten'];
-const START_YEAR = 2022;
-const CURRENT_YEAR = new Date().getFullYear();
+    let activeYear = CURRENT_YEAR;
+    let activeOursMonth = new Date().getMonth();
+    let currentLang = localStorage.getItem('kk2_lang') || 'jp';
 
-// ─── STATE ───────────────────────────────────────────────────
-let years    = [];
-let oursData = {};
-let balances = {};
-let ledgers  = {};
-let _id      = 1;
+    // ─── PWA: SERVICE WORKER ─────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.warn('SW registration failed:', err));
+      });
+    }
 
-let activeOursYear   = CURRENT_YEAR;
-let activeOursMonth  = new Date().getMonth();
-let activeSettleYear = CURRENT_YEAR;
+    // ─── FIREBASE AUTH ────────────────────────────────────────────
+    let currentUser = null;
+    let whoAmI = localStorage.getItem('kk2_who') || null; // 'dane' or 'shizu'
+    let userIsEditing = false;
+    let saveTimer = null;
+    let unsubFirestore = null;
 
-// ─── PWA: SERVICE WORKER ─────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.warn('SW registration failed:', err));
-  });
-}
+    document.addEventListener('focusin', e => {
+      userIsEditing = true;
+    });
+    document.addEventListener('focusout', () => { setTimeout(() => { userIsEditing = false; }, 300); });
 
-// ─── FIREBASE AUTH ────────────────────────────────────────────
-let currentUser = null;
-let whoAmI     = localStorage.getItem('kk2_who') || null; // 'dane' or 'shizu'
-let userIsEditing = false;
-let saveTimer = null;
-let unsubFirestore = null;
+    function chooseUser(name) {
+      whoAmI = name;
+      localStorage.setItem('kk2_who', name);
+      // Sign in anonymously — silent, no popup, just for Firestore access
+      auth.signInAnonymously().catch(err => console.error('Anon auth failed:', err));
+    }
 
-document.addEventListener('focusin', e => {
-  userIsEditing = true;
-});
-document.addEventListener('focusout', () => { setTimeout(() => { userIsEditing = false; }, 300); });
+    function signOut() {
+      whoAmI = null;
+      localStorage.removeItem('kk2_who');
+      if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
+      auth.signOut();
+    }
 
-function chooseUser(name) {
-  whoAmI = name;
-  localStorage.setItem('kk2_who', name);
-  // Sign in anonymously — silent, no popup, just for Firestore access
-  auth.signInAnonymously().catch(err => console.error('Anon auth failed:', err));
-}
-
-function signOut() {
-  whoAmI = null;
-  localStorage.removeItem('kk2_who');
-  if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
-  auth.signOut();
-}
-
-auth.onAuthStateChanged(user => {
-  currentUser = user;
-  if (user && whoAmI) {
-    // Known user + auth → show app
-    document.getElementById('signin-overlay').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    highlightCurrentUser();
-    subscribeToData();
-  } else if (!user && whoAmI) {
-    // Have a saved name but no auth session → re-auth anonymously
-    auth.signInAnonymously().catch(() => {});
-  } else {
-    // No name chosen → show picker
-    document.getElementById('signin-overlay').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
-  }
-});
-
-function highlightCurrentUser() {
-  // Visually highlight which avatar is 'me' in the topbar
-  const d = document.querySelector('.av-d');
-  const s = document.querySelector('.av-s');
-  if (!d || !s) return;
-  if (whoAmI === 'dane')  { d.style.boxShadow = '0 0 0 2.5px var(--accent1)'; s.style.opacity = '0.45'; }
-  if (whoAmI === 'shizu') { s.style.boxShadow = '0 0 0 2.5px var(--pink)'; d.style.opacity = '0.45'; }
-}
-
-// ─── FIRESTORE SYNC ───────────────────────────────────────────
-function subscribeToData() {
-  if (unsubFirestore) unsubFirestore();
-  unsubFirestore = DOC.onSnapshot({ includeMetadataChanges: true }, snap => {
-    if (!snap.exists) { init(); return; }
-    const d = snap.data();
-    if (d.years)    years    = d.years;
-    if (d.oursData) oursData = d.oursData;
-    if (d.balances) balances = d.balances;
-    if (d.ledgers)  ledgers  = d.ledgers;
-    if (d._id)      _id      = d._id;
-    // Mirror to localStorage for offline fallback
-    try {
-      localStorage.setItem('kk2_years',    JSON.stringify(years));
-      localStorage.setItem('kk2_ours',     JSON.stringify(oursData));
-      localStorage.setItem('kk2_balances', JSON.stringify(balances));
-      localStorage.setItem('kk2_ledgers',  JSON.stringify(ledgers));
-      localStorage.setItem('kk2_id',       String(_id));
-    } catch(e) {}
-    // Only re-render on confirmed server writes from the OTHER device
-    if (!snap.metadata.hasPendingWrites && !userIsEditing) refreshUI();
-    updateSyncPill(snap.metadata.hasPendingWrites, snap.metadata.fromCache);
-  }, err => console.error('Firestore:', err));
-}
-
-function refreshUI() {
-  if (!years.length) for (let y = START_YEAR; y <= CURRENT_YEAR; y++) ensureYear(y);
-  if (!years.includes(activeOursYear))   activeOursYear   = years[years.length - 1];
-  if (!years.includes(activeSettleYear)) activeSettleYear = years[years.length - 1];
-  renderOursYearBar();
-  renderSettleYearBar();
-  loadOursYear(activeOursYear);
-  loadSettleYear(activeSettleYear);
-  updateHome();
-}
-
-function updateSyncPill(hasPending, fromCache) {
-  const el = document.getElementById('sync-status');
-  if (!el) return;
-  if (hasPending)       { el.textContent = '⏳ 同期中'; el.className = 'sync-pill sync-pending'; }
-  else if (fromCache)   { el.textContent = '📴 オフライン'; el.className = 'sync-pill sync-offline'; }
-  else                  { el.textContent = '✓ 同期済';  el.className = 'sync-pill sync-ok'; }
-}
-
-// ─── PWA: INSTALL PROMPT ─────────────────────────────────────
-let deferredPrompt = null;
-const banner   = document.getElementById('install-banner');
-const installBtn = document.getElementById('install-btn');
-const dismissBtn = document.getElementById('dismiss-btn');
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  banner.classList.add('show');
-});
-
-installBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  banner.classList.remove('show');
-});
-
-dismissBtn.addEventListener('click', () => {
-  banner.classList.remove('show');
-  deferredPrompt = null;
-});
-
-window.addEventListener('appinstalled', () => {
-  banner.classList.remove('show');
-  deferredPrompt = null;
-});
-
-// ─── PWA: OFFLINE DETECTION ──────────────────────────────────
-function updateOnlineStatus() {
-  document.body.classList.toggle('offline', !navigator.onLine);
-}
-window.addEventListener('online',  updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
-
-// ─── PERSISTENCE ─────────────────────────────────────────────
-function save() {
-  // localStorage: instant local write (offline fallback)
-  try {
-    localStorage.setItem('kk2_years',    JSON.stringify(years));
-    localStorage.setItem('kk2_ours',     JSON.stringify(oursData));
-    localStorage.setItem('kk2_balances', JSON.stringify(balances));
-    localStorage.setItem('kk2_ledgers',  JSON.stringify(ledgers));
-    localStorage.setItem('kk2_id',       String(_id));
-  } catch(e) {}
-  // Firestore: debounced write (syncs to other devices)
-  if (!currentUser) return;
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    DOC.set({ years, oursData, balances, ledgers, _id })
-       .catch(err => console.error('Save error:', err));
-  }, 600);
-}
-
-function loadStorage() {
-  // Only reads from localStorage (Firestore loaded via subscribeToData)
-  try {
-    const y = localStorage.getItem('kk2_years');
-    const o = localStorage.getItem('kk2_ours');
-    const b = localStorage.getItem('kk2_balances');
-    const l = localStorage.getItem('kk2_ledgers');
-    const i = localStorage.getItem('kk2_id');
-    if (y) years    = JSON.parse(y);
-    if (o) oursData = JSON.parse(o);
-    if (b) balances = JSON.parse(b);
-    if (l) ledgers  = JSON.parse(l);
-    if (i) _id      = parseInt(i) || 1;
-  } catch(e) {}
-}
-
-// ─── YEAR MANAGEMENT ─────────────────────────────────────────
-function ensureYear(yr) {
-  yr = parseInt(yr);
-  if (!years.includes(yr)) {
-    years.push(yr);
-    years.sort((a,b) => a - b);
-  }
-  if (!oursData[yr]) {
-    oursData[yr] = MONTHS.map(() => Object.fromEntries(COLS.map(c => [c,''])));
-  }
-  if (!balances[yr]) balances[yr] = { rakuten:'', wallet:'' };
-  if (!ledgers[yr])  ledgers[yr]  = { wos:[], sow:[], wod:[], dow:[] };
-}
-
-function addYear(section) {
-  const last = years.length ? years[years.length - 1] : CURRENT_YEAR - 1;
-  const next = last + 1;
-  ensureYear(next);
-  save();
-  if (section === 'ours') {
-    activeOursYear = next;
-    renderOursYearBar();
-    loadOursYear(next);
-  } else {
-    activeSettleYear = next;
-    renderSettleYearBar();
-    loadSettleYear(next);
-  }
-}
-
-// ─── FORMAT HELPERS ──────────────────────────────────────────
-function parseNum(s) {
-  if (!s && s !== 0) return 0;
-  return parseFloat(String(s).replace(/[¥,\s]/g,'')) || 0;
-}
-function fmtYen(n) {
-  n = Math.round(n);
-  if (!n) return '—';
-  if (n < 0) return '-¥' + Math.abs(n).toLocaleString('ja-JP');
-  return '¥' + n.toLocaleString('ja-JP');
-}
-function fmtInput(n) {
-  return n ? '¥' + Math.round(n).toLocaleString('ja-JP') : '';
-}
-function calculateRowNet(row) {
-  if (!row) return 0;
-  return parseNum(row.dane) + parseNum(row.shizu)
-       - parseNum(row.elec) - parseNum(row.water)
-       - parseNum(row.net) - parseNum(row.food)
-       - parseNum(row.misc) - parseNum(row.car)
-       - parseNum(row.rakuten);
-}
-
-// ─── OURS YEAR BAR ───────────────────────────────────────────
-function renderOursYearBar() {
-  const bar = document.getElementById('ours-year-bar');
-  bar.innerHTML = '';
-  years.forEach(yr => {
-    const btn = document.createElement('button');
-    btn.className = 'year-tab' + (yr === activeOursYear ? ' active' : '');
-    btn.textContent = String(yr);
-    btn.onclick = () => { activeOursYear = yr; renderOursYearBar(); loadOursYear(yr); };
-    bar.appendChild(btn);
-  });
-  const add = document.createElement('button');
-  add.className = 'year-tab add-btn';
-  add.textContent = '＋';
-  add.title = '年を追加';
-  add.onclick = () => addYear('ours');
-  bar.appendChild(add);
-  setTimeout(() => {
-    const active = bar.querySelector('.year-tab.active');
-    if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
-  }, 50);
-}
-
-// ─── OURS TABLE ──────────────────────────────────────────────
-function initOursFormListeners() {
-  const fields = {
-    'inp-dane': 'dane',
-    'inp-shizu': 'shizu',
-    'inp-elec': 'elec',
-    'inp-water': 'water',
-    'inp-net': 'net',
-    'inp-food': 'food',
-    'inp-misc': 'misc',
-    'inp-car': 'car',
-    'inp-rakuten': 'rakuten'
-  };
-
-  Object.entries(fields).forEach(([id, key]) => {
-    const inp = document.getElementById(id);
-    if (!inp) return;
-
-    inp.addEventListener('focus', function() {
-      this.value = this.value.replace(/[¥,]/g,'');
+    auth.onAuthStateChanged(user => {
+      currentUser = user;
+      if (user && whoAmI) {
+        // Known user + auth → show app
+        document.getElementById('signin-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        highlightCurrentUser();
+        subscribeToData();
+      } else if (!user && whoAmI) {
+        // Have a saved name but no auth session → re-auth anonymously
+        auth.signInAnonymously().catch(() => { });
+      } else {
+        // No name chosen → show picker
+        document.getElementById('signin-overlay').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+        if (unsubFirestore) { unsubFirestore(); unsubFirestore = null; }
+      }
     });
 
-    inp.addEventListener('blur', function() {
-      const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
-      const yr = activeOursYear;
-      const mi = activeOursMonth;
-      oursData[yr][mi][key] = n || '';
-      this.value = n ? fmtInput(n) : '';
+    function highlightCurrentUser() {
+      // Visually highlight which avatar is 'me' in the topbar
+      const d = document.querySelector('.av-d');
+      const s = document.querySelector('.av-s');
+      if (!d || !s) return;
+      if (whoAmI === 'dane') { d.style.boxShadow = '0 0 0 2.5px var(--accent1)'; s.style.opacity = '0.45'; }
+      if (whoAmI === 'shizu') { s.style.boxShadow = '0 0 0 2.5px var(--pink)'; d.style.opacity = '0.45'; }
+    }
+
+    // ─── FIRESTORE SYNC ───────────────────────────────────────────
+    function subscribeToData() {
+      if (unsubFirestore) unsubFirestore();
+      unsubFirestore = DOC.onSnapshot({ includeMetadataChanges: true }, snap => {
+        if (!snap.exists) { init(); return; }
+        const d = snap.data();
+        if (d.years) years = d.years;
+        if (d.oursData) oursData = d.oursData;
+        if (d.balances) balances = d.balances;
+        if (d.ledgers) ledgers = d.ledgers;
+        if (d._id) _id = d._id;
+        // Mirror to localStorage for offline fallback
+        try {
+          localStorage.setItem('kk2_years', JSON.stringify(years));
+          localStorage.setItem('kk2_ours', JSON.stringify(oursData));
+          localStorage.setItem('kk2_balances', JSON.stringify(balances));
+          localStorage.setItem('kk2_ledgers', JSON.stringify(ledgers));
+          localStorage.setItem('kk2_id', String(_id));
+        } catch (e) { }
+        // Only re-render on confirmed server writes from the OTHER device
+        if (!snap.metadata.hasPendingWrites && !userIsEditing) refreshUI();
+        updateSyncPill(snap.metadata.hasPendingWrites, snap.metadata.fromCache);
+      }, err => console.error('Firestore:', err));
+    }
+
+    // ─── TRANSLATION SYSTEM ───────────────────────────────────────
+    const TRANSLATIONS = {
+      en: {
+        logo: 'Kakeibo',
+        logoSub: 'Household Finance',
+        whoTitle: 'Who are you?',
+        husband: 'Husband',
+        wife: 'Wife',
+        autoSignin: 'Auto-signs in next time',
+        installBanner: '📲 Add to Home screen to use offline',
+        installBtn: 'Install',
+        totalAssets: 'Total Assets',
+        rakutenBank: 'Rakuten Bank',
+        cash: 'Cash',
+        yearLabel: 'Year',
+        settleSummary: 'Settlement Summary',
+        oursTitle: 'OURS <span style="color:var(--accent2)">Wallet</span>',
+        oursSub: 'Shared wallet · all years',
+        totalBalance: 'Total Balance',
+        rakutenBal: 'Rakuten Bank Balance',
+        walletBal: 'Our Wallet Cash',
+        contribution: 'Contribution',
+        expenses: 'Expenses',
+        elec: 'Electricity',
+        water: 'Water',
+        net: 'Internet',
+        food: 'Food',
+        misc: 'Daily & Misc',
+        car: 'Car maintenance, Tax & Eve',
+        rakutenCard: 'Rakuten Card',
+        annualSummary: 'Annual Summary',
+        colMonth: 'Month',
+        colNet: 'Net Total',
+        colTotal: 'Total',
+        settleTitle: 'Settlement <span style="color:var(--accent2)">Management</span>',
+        settleSub: 'Who owes whom',
+        addBtn: '＋ Add',
+        modalWho: 'Who pays/owes?',
+        modalDate: 'Date',
+        modalPurpose: 'Purpose',
+        modalAmount: 'Amount',
+        modalCancel: 'Cancel',
+        modalSave: 'Save',
+        offline: 'Offline',
+        syncing: '⏳ Syncing...',
+        synced: '✓ Synced'
+      },
+      jp: {
+        logo: '家計簿',
+        logoSub: 'Household Finance',
+        whoTitle: 'どちらですか？ Who are you?',
+        husband: '夫 Husband',
+        wife: '妻 Wife',
+        autoSignin: '次回から自動でサインイン',
+        installBanner: '📲 ホーム画面に追加してオフラインで使えます',
+        installBtn: 'インストール',
+        totalAssets: '総資産',
+        rakutenBank: '楽天銀行',
+        cash: '現金',
+        yearLabel: '年度',
+        settleSummary: '精算サマリー',
+        oursTitle: 'OURS <span style="color:var(--accent2)">家計</span>',
+        oursSub: '共有財布・全年度',
+        totalBalance: '残高合計',
+        rakutenBal: '楽天銀行残高',
+        walletBal: 'アワーワレット現金',
+        contribution: '拠出',
+        expenses: '支出',
+        elec: '電気',
+        water: '水道',
+        net: 'インターネット',
+        food: '食費',
+        misc: '日用品・その他',
+        car: '車検・自動車税・イヴ',
+        rakutenCard: '楽天クレジット',
+        annualSummary: '年間サマリー',
+        colMonth: '月',
+        colNet: '収支合計',
+        colTotal: '合計',
+        settleTitle: '精算管理 <span style="color:var(--accent2)">Settlement</span>',
+        settleSub: '精算の計算',
+        addBtn: '＋ 追加 Add',
+        modalWho: '誰が支払う？ Who pays/owes?',
+        modalDate: '日付 Date',
+        modalPurpose: '理由 Purpose',
+        modalAmount: '金額 Amount',
+        modalCancel: 'キャンセル',
+        modalSave: '追加 Save',
+        offline: 'オフライン Offline',
+        syncing: '⏳ 同期中',
+        synced: '✓ 同期済'
+      }
+    };
+
+    function applyLanguage() {
+      document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        const translation = TRANSLATIONS[currentLang]?.[key];
+        if (translation !== undefined) {
+          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = translation;
+          } else if (translation.includes('<')) {
+            el.innerHTML = translation;
+          } else {
+            el.textContent = translation;
+          }
+        }
+      });
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.textContent = currentLang === 'jp' ? 'EN' : 'JP';
+      });
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'jp' ? 'en' : 'jp';
+      localStorage.setItem('kk2_lang', currentLang);
+      applyLanguage();
+      refreshUI();
+    }
+
+    function refreshUI() {
+      applyLanguage();
+      if (!years.length) for (let y = START_YEAR; y <= CURRENT_YEAR; y++) ensureYear(y);
+      if (!years.includes(activeYear)) activeYear = years[years.length - 1];
+      renderOursYearBar();
+      renderSettleYearBar();
+      loadOursYear(activeYear);
+      loadSettleYear(activeYear);
+      updateHome();
+    }
+
+    function updateSyncPill(hasPending, fromCache) {
+      const el = document.getElementById('sync-status');
+      if (!el) return;
+      if (hasPending) { el.textContent = currentLang === 'jp' ? '⏳ 同期中' : '⏳ Syncing...'; el.className = 'sync-pill sync-pending'; }
+      else if (fromCache) { el.textContent = currentLang === 'jp' ? '📴 オフライン' : '📴 Offline'; el.className = 'sync-pill sync-offline'; }
+      else { el.textContent = currentLang === 'jp' ? '✓ 同期済' : '✓ Synced'; el.className = 'sync-pill sync-ok'; }
+    }
+
+    // ─── PWA: INSTALL PROMPT ─────────────────────────────────────
+    let deferredPrompt = null;
+    const banner = document.getElementById('install-banner');
+    const installBtn = document.getElementById('install-btn');
+    const dismissBtn = document.getElementById('dismiss-btn');
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.classList.add('show');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      banner.classList.remove('show');
+    });
+
+    dismissBtn.addEventListener('click', () => {
+      banner.classList.remove('show');
+      deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      banner.classList.remove('show');
+      deferredPrompt = null;
+    });
+
+    // ─── PWA: OFFLINE DETECTION ──────────────────────────────────
+    function updateOnlineStatus() {
+      document.body.classList.toggle('offline', !navigator.onLine);
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ─── PERSISTENCE ─────────────────────────────────────────────
+    function save() {
+      // localStorage: instant local write (offline fallback)
+      try {
+        localStorage.setItem('kk2_years', JSON.stringify(years));
+        localStorage.setItem('kk2_ours', JSON.stringify(oursData));
+        localStorage.setItem('kk2_balances', JSON.stringify(balances));
+        localStorage.setItem('kk2_ledgers', JSON.stringify(ledgers));
+        localStorage.setItem('kk2_id', String(_id));
+      } catch (e) { }
+      // Firestore: debounced write (syncs to other devices)
+      if (!currentUser) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        DOC.set({ years, oursData, balances, ledgers, _id })
+          .catch(err => console.error('Save error:', err));
+      }, 600);
+    }
+
+    function loadStorage() {
+      // Only reads from localStorage (Firestore loaded via subscribeToData)
+      try {
+        const y = localStorage.getItem('kk2_years');
+        const o = localStorage.getItem('kk2_ours');
+        const b = localStorage.getItem('kk2_balances');
+        const l = localStorage.getItem('kk2_ledgers');
+        const i = localStorage.getItem('kk2_id');
+        if (y) years = JSON.parse(y);
+        if (o) oursData = JSON.parse(o);
+        if (b) balances = JSON.parse(b);
+        if (l) ledgers = JSON.parse(l);
+        if (i) _id = parseInt(i) || 1;
+      } catch (e) { }
+    }
+
+    // ─── YEAR MANAGEMENT ─────────────────────────────────────────
+    function ensureYear(yr) {
+      yr = parseInt(yr);
+      if (!years.includes(yr)) {
+        years.push(yr);
+        years.sort((a, b) => a - b);
+      }
+      if (!oursData[yr]) {
+        oursData[yr] = MONTHS.map(() => Object.fromEntries(COLS.map(c => [c, ''])));
+      }
+      if (!balances[yr]) balances[yr] = { rakuten: '', wallet: '' };
+      if (!ledgers[yr]) ledgers[yr] = { wos: [], sow: [], wod: [], dow: [] };
+    }
+
+    function addYear() {
+      const last = years.length ? years[years.length - 1] : CURRENT_YEAR - 1;
+      const next = last + 1;
+      ensureYear(next);
+      save();
+      selectYear(next);
+    }
+
+    // ─── FORMAT HELPERS ──────────────────────────────────────────
+    function parseNum(s) {
+      if (!s && s !== 0) return 0;
+      return parseFloat(String(s).replace(/[¥,\s]/g, '')) || 0;
+    }
+    function fmtYen(n) {
+      n = Math.round(n);
+      if (!n) return '—';
+      if (n < 0) return '-¥' + Math.abs(n).toLocaleString('ja-JP');
+      return '¥' + n.toLocaleString('ja-JP');
+    }
+    function fmtInput(n) {
+      return n ? Math.round(n).toLocaleString('ja-JP') : '';
+    }
+    function calculateRowNet(row) {
+      if (!row) return 0;
+      return parseNum(row.dane) + parseNum(row.shizu)
+        - parseNum(row.elec) - parseNum(row.water)
+        - parseNum(row.net) - parseNum(row.food)
+        - parseNum(row.misc) - parseNum(row.car)
+        - parseNum(row.rakuten);
+    }
+
+    // ─── YEAR DROPDOWN ───────────────────────────────────────────
+    function renderYearDropdowns() {
+      renderYearDropdown('ours');
+      renderYearDropdown('settle');
+    }
+
+    function renderYearDropdown(section) {
+      const dropdown = document.getElementById(section + '-year-dropdown');
+      const label = document.getElementById(section + '-year-label');
+      if (!dropdown || !label) return;
+
+      label.textContent = String(activeYear);
+
+      dropdown.innerHTML = '';
+      years.forEach(yr => {
+        const item = document.createElement('div');
+        item.className = 'year-dropdown-item' + (yr === activeYear ? ' active' : '');
+        item.textContent = String(yr);
+        item.onclick = () => selectYear(yr);
+        dropdown.appendChild(item);
+      });
+
+      // Add year option
+      const addItem = document.createElement('div');
+      addItem.className = 'year-dropdown-add';
+      addItem.innerHTML = '<span style="font-size:16px;line-height:1">+</span> 年を追加';
+      addItem.onclick = () => { closeAllDropdowns(); addYear(); };
+      dropdown.appendChild(addItem);
+    }
+
+    // Called when the dropdown button is tapped
+    function toggleYearDropdown(section) {
+      const dropdown = document.getElementById(section + '-year-dropdown');
+      const btn = document.getElementById(section + '-year-btn');
+      if (!dropdown) return;
+
+      const isOpen = dropdown.classList.contains('open');
+
+      // Close all first
+      closeAllDropdowns();
+
+      if (!isOpen) {
+        renderYearDropdown(section);
+        dropdown.classList.add('open');
+        btn.classList.add('open');
+      }
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.year-dropdown').forEach(d => d.classList.remove('open'));
+      document.querySelectorAll('.year-select-btn').forEach(b => b.classList.remove('open'));
+    }
+
+    // Select a year globally — syncs all tabs
+    function selectYear(yr) {
+      closeAllDropdowns();
+      activeYear = yr;
+      renderYearDropdowns();
+      loadOursYear(yr);
+      loadSettleYear(yr);
+      updateHome();
+    }
+
+    // Alias kept for compatibility with swipe gesture calls
+    function renderOursYearBar() { renderYearDropdowns(); }
+    function renderSettleYearBar() { renderYearDropdowns(); }
+
+    // ─── OURS TABLE ──────────────────────────────────────────────
+    function initOursFormListeners() {
+      const fields = {
+        'inp-dane': 'dane',
+        'inp-shizu': 'shizu',
+        'inp-elec': 'elec',
+        'inp-water': 'water',
+        'inp-net': 'net',
+        'inp-food': 'food',
+        'inp-misc': 'misc',
+        'inp-car': 'car',
+        'inp-rakuten': 'rakuten'
+      };
+
+      Object.entries(fields).forEach(([id, key]) => {
+        const inp = document.getElementById(id);
+        if (!inp) return;
+
+        inp.addEventListener('focus', function () {
+          this.value = this.value.replace(/[¥,]/g, '');
+        });
+
+        inp.addEventListener('blur', function () {
+          const n = parseFloat(this.value.replace(/[¥,]/g, '')) || 0;
+          const yr = activeYear;
+          const mi = activeOursMonth;
+          oursData[yr][mi][key] = n || '';
+          this.value = n ? fmtInput(n) : '';
+          updateOursTotals(yr);
+          updateHome();
+          save();
+        });
+      });
+    }
+
+    // ─── MONTH NAVIGATOR ─────────────────────────────────────────
+    function renderMonthNav() {
+      const navName = document.getElementById('ours-month-nav-name');
+      const dotsEl = document.getElementById('ours-month-dots');
+      const prevBtn = document.getElementById('month-prev-btn');
+      const nextBtn = document.getElementById('month-next-btn');
+
+      if (navName) {
+        const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        navName.textContent = currentLang === 'jp' ? MONTHS[activeOursMonth] : MONTH_NAMES_EN[activeOursMonth];
+      }
+
+      if (dotsEl) {
+        dotsEl.innerHTML = '';
+        MONTHS.forEach((_, mi) => {
+          const dot = document.createElement('div');
+          dot.className = 'month-dot' + (mi === activeOursMonth ? ' active' : '');
+          dot.onclick = () => selectOursMonth(mi);
+          dotsEl.appendChild(dot);
+        });
+      }
+
+      // Prev arrow: disable if at Jan of the first year
+      if (prevBtn) {
+        const atFirstMonth = activeOursMonth === 0 && years.indexOf(activeYear) === 0;
+        prevBtn.disabled = atFirstMonth;
+      }
+      // Next arrow: disable if at Dec of the last year
+      if (nextBtn) {
+        const atLastMonth = activeOursMonth === 11 && years.indexOf(activeYear) === years.length - 1;
+        nextBtn.disabled = atLastMonth;
+      }
+    }
+
+    // Kept as alias so renderOursMonthBar() calls from legacy code still work
+    function renderOursMonthBar() { renderMonthNav(); }
+
+    function selectOursMonth(mi) {
+      activeOursMonth = mi;
+      renderMonthNav();
+      loadOursYear(activeYear);
+    }
+
+    function initOursPage() {
+      initOursFormListeners();
+      initBalanceFormListeners();
+      renderMonthNav();
+    }
+
+    function loadOursYear(yr) {
+      activeYear = yr;
+      ensureYear(yr);
+
+      // Sync the navigator and year label
+      renderMonthNav();
+      renderYearDropdowns();
+
+      const monthTitle = document.getElementById('ours-month-title');
+      if (monthTitle) {
+        if (currentLang === 'jp') {
+          monthTitle.textContent = `${activeYear}年 ${MONTHS[activeOursMonth]} 収支`;
+        } else {
+          const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+          monthTitle.textContent = `${MONTH_NAMES_EN[activeOursMonth]} ${activeYear} Budget`;
+        }
+      }
+
+      const d = oursData[yr][activeOursMonth];
+
+      const fields = {
+        'inp-dane': 'dane',
+        'inp-shizu': 'shizu',
+        'inp-elec': 'elec',
+        'inp-water': 'water',
+        'inp-net': 'net',
+        'inp-food': 'food',
+        'inp-misc': 'misc',
+        'inp-car': 'car',
+        'inp-rakuten': 'rakuten'
+      };
+
+      Object.entries(fields).forEach(([id, key]) => {
+        const inp = document.getElementById(id);
+        if (inp) {
+          const stored = d[key];
+          const targetVal = stored ? fmtInput(parseNum(stored)) : '';
+          if (document.activeElement !== inp && inp.value !== targetVal) {
+            inp.value = targetVal;
+          }
+        }
+      });
+
+      const b = balances[yr];
+      const rakutenBal = document.getElementById('rakuten-bal');
+      const walletBal = document.getElementById('wallet-bal');
+      const targetRakuten = b.rakuten ? fmtInput(parseNum(b.rakuten)) : '';
+      if (document.activeElement !== rakutenBal && rakutenBal.value !== targetRakuten) {
+        rakutenBal.value = targetRakuten;
+      }
+      const targetWallet = b.wallet ? fmtInput(parseNum(b.wallet)) : '';
+      if (document.activeElement !== walletBal && walletBal.value !== targetWallet) {
+        walletBal.value = targetWallet;
+      }
+
+      // Update total balance display at the top of OURS tab
+      const totalBalEl = document.getElementById('ours-balance-total');
+      if (totalBalEl) {
+        const rVal = parseNum(b.rakuten);
+        const wVal = parseNum(b.wallet);
+        const totalBal = rVal + wVal;
+        totalBalEl.textContent = totalBal ? '¥' + totalBal.toLocaleString('ja-JP') : '¥0';
+      }
+
       updateOursTotals(yr);
       updateHome();
-      save();
-    });
-  });
-}
-
-function renderOursMonthBar() {
-  const bar = document.getElementById('ours-month-bar');
-  if (!bar) return;
-  bar.innerHTML = '';
-  MONTHS.forEach((m, mi) => {
-    const tab = document.createElement('div');
-    tab.className = 'month-tab' + (activeOursMonth === mi ? ' active' : '');
-    tab.textContent = m;
-    tab.onclick = () => {
-      selectOursMonth(mi);
-    };
-    bar.appendChild(tab);
-  });
-  
-  setTimeout(() => {
-    const active = bar.querySelector('.month-tab.active');
-    if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
-  }, 50);
-}
-
-function selectOursMonth(mi) {
-  activeOursMonth = mi;
-  renderOursMonthBar();
-  loadOursYear(activeOursYear);
-}
-
-function initOursPage() {
-  initOursFormListeners();
-  initBalanceFormListeners();
-  renderOursMonthBar();
-}
-
-function loadOursYear(yr) {
-  activeOursYear = yr;
-  ensureYear(yr);
-  
-  const monthTitle = document.getElementById('ours-month-title');
-  if (monthTitle) monthTitle.textContent = `${activeOursYear}年 ${MONTHS[activeOursMonth]} 収支`;
-
-  const d = oursData[yr][activeOursMonth];
-  
-  const fields = {
-    'inp-dane': 'dane',
-    'inp-shizu': 'shizu',
-    'inp-elec': 'elec',
-    'inp-water': 'water',
-    'inp-net': 'net',
-    'inp-food': 'food',
-    'inp-misc': 'misc',
-    'inp-car': 'car',
-    'inp-rakuten': 'rakuten'
-  };
-
-  Object.entries(fields).forEach(([id, key]) => {
-    const inp = document.getElementById(id);
-    if (inp) {
-      const stored = d[key];
-      const targetVal = stored ? fmtInput(parseNum(stored)) : '';
-      if (document.activeElement !== inp && inp.value !== targetVal) {
-        inp.value = targetVal;
-      }
-    }
-  });
-
-  const b = balances[yr];
-  const rakutenBal = document.getElementById('rakuten-bal');
-  const walletBal = document.getElementById('wallet-bal');
-  const targetRakuten = b.rakuten ? fmtInput(parseNum(b.rakuten)) : '';
-  if (document.activeElement !== rakutenBal && rakutenBal.value !== targetRakuten) {
-    rakutenBal.value = targetRakuten;
-  }
-  const targetWallet = b.wallet ? fmtInput(parseNum(b.wallet)) : '';
-  if (document.activeElement !== walletBal && walletBal.value !== targetWallet) {
-    walletBal.value = targetWallet;
-  }
-
-  // Update total balance display at the top of OURS tab
-  const totalBalEl = document.getElementById('ours-balance-total');
-  if (totalBalEl) {
-    const rVal = parseNum(b.rakuten);
-    const wVal = parseNum(b.wallet);
-    const totalBal = rVal + wVal;
-    totalBalEl.textContent = totalBal ? '¥' + totalBal.toLocaleString('ja-JP') : '¥0';
-  }
-
-  updateOursTotals(yr);
-  updateHome();
-}
-
-function updateOursTotals(yr) {
-  ensureYear(yr);
-  const colTotals = Object.fromEntries(COLS.map(c => [c,0]));
-  
-  const summaryList = document.getElementById('annual-summary-list');
-  if (summaryList) summaryList.innerHTML = '';
-  
-  MONTHS.forEach((m, mi) => {
-    const rowData = oursData[yr][mi];
-    const rowSum = calculateRowNet(rowData);
-    
-    COLS.forEach(col => {
-      colTotals[col] += parseNum(rowData[col]);
-    });
-
-    if (mi === activeOursMonth) {
-      const netBadge = document.getElementById('ours-month-net');
-      if (netBadge) {
-        const hasAnyInput = COLS.some(col => rowData[col] !== '');
-        netBadge.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
-      }
     }
 
-    if (summaryList) {
-      const rowDiv = document.createElement('div');
-      rowDiv.className = 'summary-row' + (mi === activeOursMonth ? ' active' : '');
-      rowDiv.onclick = () => selectOursMonth(mi);
-      
-      const monthLabel = document.createElement('div');
-      monthLabel.className = 'summary-month';
-      monthLabel.textContent = m;
-      
-      const valDiv = document.createElement('div');
-      valDiv.className = 'summary-val' + (rowSum < 0 ? ' negative' : '');
-      const hasAnyInput = COLS.some(col => rowData[col] !== '');
-      valDiv.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
-      
-      rowDiv.appendChild(monthLabel);
-      rowDiv.appendChild(valDiv);
-      summaryList.appendChild(rowDiv);
-    }
-  });
-
-  const yearGrand = colTotals['dane'] + colTotals['shizu']
-                  - colTotals['elec'] - colTotals['water']
-                  - colTotals['net'] - colTotals['food']
-                  - colTotals['misc'] - colTotals['car']
-                  - colTotals['rakuten'];
-
-  const grandLabel = document.getElementById('annual-summary-grand');
-  if (grandLabel) {
-    let hasAnyInputInYear = false;
-    MONTHS.forEach((m, mi) => {
-      if (COLS.some(col => oursData[yr][mi][col] !== '')) hasAnyInputInYear = true;
-    });
-    grandLabel.textContent = hasAnyInputInYear ? fmtYen(yearGrand) : '—';
-    if (yearGrand < 0) {
-      grandLabel.style.color = 'var(--pink-text)';
-    } else {
-      grandLabel.style.color = 'var(--accent1)';
-    }
-  }
-}
-
-function initBalanceFormListeners() {
-  const fields = {
-    'rakuten-bal': 'rakuten',
-    'wallet-bal': 'wallet'
-  };
-  
-  const updateLocalTotal = () => {
-    const rVal = parseNum(document.getElementById('rakuten-bal').value);
-    const wVal = parseNum(document.getElementById('wallet-bal').value);
-    const totalBal = rVal + wVal;
-    const totalBalEl = document.getElementById('ours-balance-total');
-    if (totalBalEl) {
-      totalBalEl.textContent = totalBal ? '¥' + totalBal.toLocaleString('ja-JP') : '¥0';
-    }
-  };
-
-  Object.entries(fields).forEach(([id, key]) => {
-    const inp = document.getElementById(id);
-    if (!inp) return;
-
-    inp.addEventListener('focus', function() {
-      this.value = this.value.replace(/[¥,]/g,'');
-    });
-
-    inp.addEventListener('input', updateLocalTotal);
-
-    inp.addEventListener('blur', function() {
-      const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
-      const yr = activeOursYear;
+    function updateOursTotals(yr) {
       ensureYear(yr);
-      balances[yr][key] = n || '';
-      this.value = n ? fmtInput(n) : '';
-      updateLocalTotal();
+      const colTotals = Object.fromEntries(COLS.map(c => [c, 0]));
+
+      const summaryList = document.getElementById('annual-summary-list');
+      if (summaryList) summaryList.innerHTML = '';
+
+      MONTHS.forEach((m, mi) => {
+        const rowData = oursData[yr][mi];
+        const rowSum = calculateRowNet(rowData);
+
+        COLS.forEach(col => {
+          colTotals[col] += parseNum(rowData[col]);
+        });
+
+        if (mi === activeOursMonth) {
+          const netBadge = document.getElementById('ours-month-net');
+          if (netBadge) {
+            const hasAnyInput = COLS.some(col => rowData[col] !== '');
+            netBadge.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
+          }
+        }
+
+        if (summaryList) {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'summary-row' + (mi === activeOursMonth ? ' active' : '');
+          rowDiv.onclick = () => selectOursMonth(mi);
+
+          const monthLabel = document.createElement('div');
+          monthLabel.className = 'summary-month';
+          monthLabel.textContent = m;
+
+          const valDiv = document.createElement('div');
+          valDiv.className = 'summary-val' + (rowSum < 0 ? ' negative' : '');
+          const hasAnyInput = COLS.some(col => rowData[col] !== '');
+          valDiv.textContent = hasAnyInput ? fmtYen(rowSum) : '—';
+
+          rowDiv.appendChild(monthLabel);
+          rowDiv.appendChild(valDiv);
+          summaryList.appendChild(rowDiv);
+        }
+      });
+
+      const yearGrand = colTotals['dane'] + colTotals['shizu']
+        - colTotals['elec'] - colTotals['water']
+        - colTotals['net'] - colTotals['food']
+        - colTotals['misc'] - colTotals['car']
+        - colTotals['rakuten'];
+
+      const grandLabel = document.getElementById('annual-summary-grand');
+      if (grandLabel) {
+        let hasAnyInputInYear = false;
+        MONTHS.forEach((m, mi) => {
+          if (COLS.some(col => oursData[yr][mi][col] !== '')) hasAnyInputInYear = true;
+        });
+        grandLabel.textContent = hasAnyInputInYear ? fmtYen(yearGrand) : '—';
+        if (yearGrand < 0) {
+          grandLabel.style.color = 'var(--pink-text)';
+        } else {
+          grandLabel.style.color = 'var(--accent1)';
+        }
+      }
+    }
+
+    function initBalanceFormListeners() {
+      const fields = {
+        'rakuten-bal': 'rakuten',
+        'wallet-bal': 'wallet'
+      };
+
+      const updateLocalTotal = () => {
+        const rVal = parseNum(document.getElementById('rakuten-bal').value);
+        const wVal = parseNum(document.getElementById('wallet-bal').value);
+        const totalBal = rVal + wVal;
+        const totalBalEl = document.getElementById('ours-balance-total');
+        if (totalBalEl) {
+          totalBalEl.textContent = totalBal ? '¥' + totalBal.toLocaleString('ja-JP') : '¥0';
+        }
+      };
+
+      Object.entries(fields).forEach(([id, key]) => {
+        const inp = document.getElementById(id);
+        if (!inp) return;
+
+        inp.addEventListener('focus', function () {
+          this.value = this.value.replace(/[¥,]/g, '');
+        });
+
+        inp.addEventListener('input', updateLocalTotal);
+
+        inp.addEventListener('blur', function () {
+          const n = parseFloat(this.value.replace(/[¥,]/g, '')) || 0;
+          const yr = activeYear;
+          ensureYear(yr);
+          balances[yr][key] = n || '';
+          this.value = n ? fmtInput(n) : '';
+          updateLocalTotal();
+          updateHome();
+          save();
+        });
+      });
+    }
+
+    // renderSettleYearBar is now an alias — dropdown handles both tabs
+    // function kept as alias so existing call sites don't break
+
+    // ─── LEDGER ──────────────────────────────────────────────────
+    function loadSettleYear(yr) {
+      activeYear = yr;
+      ensureYear(yr);
+
+      // Render O -> S
+      renderSettleList(yr, 'wos', 'wos-list');
+      // Render O -> D
+      renderSettleList(yr, 'wod', 'wod-list');
+      // Render D/S -> O
+      renderCombinedSettleList(yr, 'to-wallet-list');
+
+      updateLedgerTotals(yr);
+    }
+
+    function renderSettleList(yr, key, listId) {
+      const listEl = document.getElementById(listId);
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      const items = ledgers[yr][key] || [];
+      if (items.length === 0) {
+        listEl.innerHTML = `<div class="ledger-empty">${currentLang === 'jp' ? '入力がありません' : 'No entries yet'}</div>`;
+        return;
+      }
+
+      const sorted = [...items].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+      sorted.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'ledger-item';
+
+        itemEl.innerHTML = `
+      <div class="ledger-item-left">
+        <div class="ledger-item-date">${item.date || '日付未指定'}</div>
+        <div class="ledger-item-purpose">${item.purpose || ''}</div>
+      </div>
+      <div class="ledger-item-right">
+        <div class="ledger-item-amount">¥${item.amount.toLocaleString('ja-JP')}</div>
+        <button class="btn-del-item" onclick="deleteSettleItem('${key}', ${item.id})" title="削除">×</button>
+      </div>
+    `;
+        listEl.appendChild(itemEl);
+      });
+    }
+
+    function renderCombinedSettleList(yr, listId) {
+      const listEl = document.getElementById(listId);
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      const combined = [
+        ...(ledgers[yr].sow || []).map(item => ({ ...item, who: 'shizu', type: 'sow' })),
+        ...(ledgers[yr].dow || []).map(item => ({ ...item, who: 'dane', type: 'dow' }))
+      ];
+
+      if (combined.length === 0) {
+        listEl.innerHTML = `<div class="ledger-empty">${currentLang === 'jp' ? '入力がありません' : 'No entries yet'}</div>`;
+        return;
+      }
+
+      combined.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+      combined.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'ledger-item';
+
+        const badgeHtml = item.who === 'shizu'
+          ? '<span class="member-badge badge-shizu" title="Shizu">S</span>'
+          : '<span class="member-badge badge-dane" title="Dane">D</span>';
+
+        itemEl.innerHTML = `
+      <div class="ledger-item-left">
+        <div class="ledger-item-date">${item.date || '日付未指定'}</div>
+        <div class="ledger-item-purpose">${badgeHtml} ${item.purpose || ''}</div>
+      </div>
+      <div class="ledger-item-right">
+        <div class="ledger-item-amount text-pink">¥${item.amount.toLocaleString('ja-JP')}</div>
+        <button class="btn-del-item" onclick="deleteSettleItem('${item.type}', ${item.id})" title="削除">×</button>
+      </div>
+    `;
+        listEl.appendChild(itemEl);
+      });
+    }
+
+    function updateLedgerTotals(yr) {
+      ensureYear(yr);
+      const sum = k => (ledgers[yr][k] || []).reduce((a, r) => a + parseNum(r.amount), 0);
+      const wosT = sum('wos'), sowT = sum('sow'), wodT = sum('wod'), dowT = sum('dow');
+
+      const fmtVal = n => '¥' + n.toLocaleString('ja-JP');
+
+      document.getElementById('wos-total').textContent = fmtVal(wosT);
+      document.getElementById('wod-total').textContent = fmtVal(wodT);
+      document.getElementById('to-wallet-total').textContent = fmtVal(sowT + dowT);
+
+      const shizuNet = wosT - sowT;
+      const daneNet = wodT - dowT;
+      const sb = document.getElementById('shizu-net-badge');
+      const db = document.getElementById('dane-net-badge');
+
+      if (sb) {
+        sb.textContent = shizuNet === 0 ? 'Net ¥0'
+          : shizuNet > 0 ? 'O ➔ S ' + fmtVal(shizuNet)
+            : 'S ➔ O ' + fmtVal(Math.abs(shizuNet));
+        sb.className = 'net-badge ' + (shizuNet > 0 ? 'net-positive' : shizuNet < 0 ? 'net-negative' : 'net-zero');
+      }
+
+      if (db) {
+        db.textContent = daneNet === 0 ? 'Net ¥0'
+          : daneNet > 0 ? 'O ➔ D ' + fmtVal(daneNet)
+            : 'D ➔ O ' + fmtVal(Math.abs(daneNet));
+        db.className = 'net-badge ' + (daneNet > 0 ? 'net-positive' : daneNet < 0 ? 'net-negative' : 'net-zero');
+      }
+    }
+
+    let activeModalKey = '';
+    let activeModalWho = 'dane';
+
+    function openSettleModal(key) {
+      activeModalKey = key;
+      const titleEl = document.getElementById('modal-title');
+      const whoGroup = document.getElementById('modal-who-group');
+
+      if (key === 'wos') {
+        titleEl.textContent = currentLang === 'jp' ? '追加: O ➔ S' : 'Add: O ➔ S';
+        whoGroup.style.display = 'none';
+      } else if (key === 'wod') {
+        titleEl.textContent = currentLang === 'jp' ? '追加: O ➔ D' : 'Add: O ➔ D';
+        whoGroup.style.display = 'none';
+      } else {
+        titleEl.textContent = currentLang === 'jp' ? '追加: D/S ➔ O' : 'Add: D/S ➔ O';
+        whoGroup.style.display = 'block';
+        setModalWho('dane');
+      }
+
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('modal-date').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('modal-purpose').value = '';
+      document.getElementById('modal-amount').value = '';
+
+      document.getElementById('settle-modal').style.display = 'flex';
+    }
+
+    function setModalWho(who) {
+      activeModalWho = who;
+      const btnDane = document.getElementById('btn-who-dane');
+      const btnShizu = document.getElementById('btn-who-shizu');
+      if (who === 'dane') {
+        btnDane.classList.add('active');
+        btnShizu.classList.remove('active');
+      } else {
+        btnShizu.classList.add('active');
+        btnDane.classList.remove('active');
+      }
+    }
+
+    function closeSettleModal() {
+      document.getElementById('settle-modal').style.display = 'none';
+    }
+
+    function saveSettleModal() {
+      const date = document.getElementById('modal-date').value;
+      const purpose = document.getElementById('modal-purpose').value.trim() || (currentLang === 'jp' ? '未分類' : 'Uncategorized');
+      const amount = parseFloat(document.getElementById('modal-amount').value) || 0;
+
+      if (amount <= 0) {
+        alert(currentLang === 'jp' ? '金額を入力してください。' : 'Please enter an amount.');
+        return;
+      }
+
+      const yr = activeYear;
+      ensureYear(yr);
+
+      const newItem = {
+        id: _id++,
+        date,
+        purpose,
+        amount
+      };
+
+      if (activeModalKey === 'wos') {
+        ledgers[yr].wos.push(newItem);
+      } else if (activeModalKey === 'wod') {
+        ledgers[yr].wod.push(newItem);
+      } else {
+        if (activeModalWho === 'dane') {
+          ledgers[yr].dow.push(newItem);
+        } else {
+          ledgers[yr].sow.push(newItem);
+        }
+      }
+
+      closeSettleModal();
+      loadSettleYear(yr);
       updateHome();
       save();
-    });
-  });
-}
+    }
 
-// ─── SETTLE YEAR BAR ─────────────────────────────────────────
-function renderSettleYearBar() {
-  const bar = document.getElementById('settle-year-bar');
-  bar.innerHTML = '';
-  years.forEach(yr => {
-    const btn = document.createElement('button');
-    btn.className = 'year-tab' + (yr === activeSettleYear ? ' active' : '');
-    btn.textContent = String(yr);
-    btn.onclick = () => { activeSettleYear = yr; renderSettleYearBar(); loadSettleYear(yr); };
-    bar.appendChild(btn);
-  });
-  const add = document.createElement('button');
-  add.className = 'year-tab add-btn';
-  add.textContent = '＋';
-  add.title = '年を追加';
-  add.onclick = () => addYear('settle');
-  bar.appendChild(add);
-  setTimeout(() => {
-    const active = bar.querySelector('.year-tab.active');
-    if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
-  }, 50);
-}
+    function deleteSettleItem(tableKey, itemId) {
+      const yr = activeYear;
+      ensureYear(yr);
 
-// ─── LEDGER ──────────────────────────────────────────────────
-function loadSettleYear(yr) {
-  activeSettleYear = yr;
-  ensureYear(yr);
-  const keys = ['wos','sow','wod','dow'];
-  const bodyIds = { wos:'wos-body', sow:'sow-body', wod:'wod-body', dow:'dow-body' };
-  keys.forEach(k => buildLedger(yr, k, bodyIds[k]));
-  updateLedgerTotals(yr);
-}
+      ledgers[yr][tableKey] = ledgers[yr][tableKey].filter(item => item.id !== itemId);
 
-function buildLedger(yr, tableKey, bodyId) {
-  ensureYear(yr);
-  const tbody = document.getElementById(bodyId);
-  tbody.innerHTML = '';
-  ledgers[yr][tableKey].forEach(row => {
-    tbody.appendChild(makeLedgerRow(yr, tableKey, bodyId, row));
-  });
-}
+      loadSettleYear(yr);
+      updateHome();
+      save();
+    }
 
-function makeLedgerRow(yr, tableKey, bodyId, row) {
-  const tr = document.createElement('tr');
-  const tdDate = document.createElement('td');
-  const inpDate = document.createElement('input');
-  inpDate.type = 'date'; inpDate.className = 'ledger-input';
-  inpDate.value = row.date || '';
-  inpDate.addEventListener('change', function(){ row.date = this.value; save(); });
-  tdDate.appendChild(inpDate); tr.appendChild(tdDate);
+    // ─── HOME ────────────────────────────────────────────────────
+    function updateHome() {
+      const yr = activeYear;
+      ensureYear(yr);
+      const b = balances[yr];
+      const rakuten = parseNum(b.rakuten);
+      const wallet = parseNum(b.wallet);
+      const total = rakuten + wallet;
 
-  const tdP = document.createElement('td');
-  const inpP = document.createElement('input');
-  inpP.type = 'text'; inpP.className = 'ledger-input';
-  inpP.value = row.purpose || ''; inpP.placeholder = '理由 / Purpose';
-  inpP.addEventListener('input', function(){ row.purpose = this.value; save(); });
-  tdP.appendChild(inpP); tr.appendChild(tdP);
+      document.getElementById('hero-total').innerHTML = '<span>¥</span>' + (total ? total.toLocaleString('ja-JP') : '—');
+      document.getElementById('home-bank').textContent = rakuten ? '¥' + rakuten.toLocaleString('ja-JP') : '—';
+      document.getElementById('home-cash').textContent = wallet ? '¥' + wallet.toLocaleString('ja-JP') : '—';
+      document.getElementById('home-year').textContent = String(yr);
 
-  const tdA = document.createElement('td');
-  const inpA = document.createElement('input');
-  inpA.type = 'text'; inpA.className = 'ledger-input amount-input';
-  inpA.value = row.amount ? fmtInput(row.amount) : '';
-  inpA.placeholder = '¥';
-  inpA.addEventListener('focus', function(){ this.value = this.value.replace(/[¥,]/g,''); });
-  inpA.addEventListener('blur', function(){
-    const n = parseFloat(this.value.replace(/[¥,]/g,'')) || 0;
-    row.amount = n;
-    this.value = n ? fmtInput(n) : '';
-    updateLedgerTotals(yr); updateHome(); save();
-  });
-  tdA.appendChild(inpA); tr.appendChild(tdA);
+      const syr = activeYear;
+      ensureYear(syr);
+      const sum = k => (ledgers[syr][k] || []).reduce((a, r) => a + parseNum(r.amount), 0);
+      const wosT = sum('wos'), sowT = sum('sow'), wodT = sum('wod'), dowT = sum('dow');
+      const fmt0 = n => '¥' + (n || 0).toLocaleString('ja-JP');
 
-  const tdDel = document.createElement('td');
-  tdDel.style.textAlign = 'right';
-  const btn = document.createElement('button');
-  btn.className = 'btn-del'; btn.innerHTML = '×'; btn.title = '削除';
-  btn.addEventListener('click', () => {
-    ledgers[yr][tableKey] = ledgers[yr][tableKey].filter(r => r.id !== row.id);
-    buildLedger(yr, tableKey, bodyId);
-    updateLedgerTotals(yr); updateHome(); save();
-  });
-  tdDel.appendChild(btn); tr.appendChild(tdDel);
-  return tr;
-}
+      const shizuNet = Math.max(0, wosT - sowT);
+      const daneNet = Math.max(0, wodT - dowT);
 
-function addLedgerRow(tableKey) {
-  const bodyIds = { wos:'wos-body', sow:'sow-body', wod:'wod-body', dow:'dow-body' };
-  const yr = activeSettleYear;
-  ensureYear(yr);
-  const row = { id: _id++, date:'', purpose:'', amount:0 };
-  ledgers[yr][tableKey].push(row);
-  const tbody = document.getElementById(bodyIds[tableKey]);
-  tbody.appendChild(makeLedgerRow(yr, tableKey, bodyIds[tableKey], row));
-  updateLedgerTotals(yr); save();
-}
-
-function updateLedgerTotals(yr) {
-  ensureYear(yr);
-  const sum = k => ledgers[yr][k].reduce((a,r) => a + parseNum(r.amount), 0);
-  const wosT = sum('wos'), sowT = sum('sow'), wodT = sum('wod'), dowT = sum('dow');
-  const fmt0 = n => n ? '¥' + n.toLocaleString('ja-JP') : '¥0';
-  document.getElementById('wos-total').textContent = fmt0(wosT);
-  document.getElementById('sow-total').textContent = fmt0(sowT);
-  document.getElementById('wod-total').textContent = fmt0(wodT);
-  document.getElementById('dow-total').textContent = fmt0(dowT);
-
-  const shizuNet = wosT - sowT;
-  const daneNet  = wodT - dowT;
-  const sb = document.getElementById('shizu-net-badge');
-  const db = document.getElementById('dane-net-badge');
-
-  sb.textContent = shizuNet === 0 ? 'Net ¥0'
-    : shizuNet > 0 ? '→ Shizu ¥' + shizuNet.toLocaleString('ja-JP')
-    : '→ Wallet ¥' + Math.abs(shizuNet).toLocaleString('ja-JP');
-  sb.className = 'net-badge ' + (shizuNet > 0 ? 'net-positive' : shizuNet < 0 ? 'net-negative' : 'net-zero');
-
-  db.textContent = daneNet === 0 ? 'Net ¥0'
-    : daneNet > 0 ? '→ Dane ¥' + daneNet.toLocaleString('ja-JP')
-    : '→ Wallet ¥' + Math.abs(daneNet).toLocaleString('ja-JP');
-  db.className = 'net-badge ' + (daneNet > 0 ? 'net-positive' : daneNet < 0 ? 'net-negative' : 'net-zero');
-}
-
-// ─── HOME ────────────────────────────────────────────────────
-function updateHome() {
-  const yr = activeOursYear;
-  ensureYear(yr);
-  const b  = balances[yr];
-  const rakuten = parseNum(b.rakuten);
-  const wallet  = parseNum(b.wallet);
-  const total   = rakuten + wallet;
-
-  document.getElementById('hero-total').innerHTML = '<span>¥</span>' + (total ? total.toLocaleString('ja-JP') : '—');
-  document.getElementById('home-bank').textContent = rakuten ? '¥' + rakuten.toLocaleString('ja-JP') : '—';
-  document.getElementById('home-cash').textContent = wallet  ? '¥' + wallet.toLocaleString('ja-JP')  : '—';
-  document.getElementById('home-year').textContent = String(yr);
-
-  const syr = activeSettleYear;
-  ensureYear(syr);
-  const sum = k => ledgers[syr][k].reduce((a,r) => a + parseNum(r.amount), 0);
-  const wosT = sum('wos'), sowT = sum('sow'), wodT = sum('wod'), dowT = sum('dow');
-  const fmt0 = n => '¥' + (n||0).toLocaleString('ja-JP');
-  document.getElementById('home-settle').innerHTML = [
-    { label:'Wallet → owes Shizu', val:wosT, pink:false },
-    { label:'Shizu → owes Wallet', val:sowT, pink:true  },
-    { label:'Wallet → owes Dane',  val:wodT, pink:false },
-    { label:'Dane → owes Wallet',  val:dowT, pink:true  },
-  ].map(r => `<div class="settle-preview-row">
-      <span class="settle-preview-label">${r.label}</span>
-      <span class="settle-preview-val ${r.pink?'pink-val':''}">${fmt0(r.val)}</span>
+      document.getElementById('home-settle').innerHTML = [
+        { label: 'O ➔ S', val: shizuNet },
+        { label: 'O ➔ D', val: daneNet }
+      ].map(r => `<div class="settle-preview-row">
+      <span class="settle-preview-label" style="font-weight:600; font-size:13px; color:var(--text2); letter-spacing:0.04em;">${r.label}</span>
+      <span class="settle-preview-val">${fmt0(r.val)}</span>
     </div>`).join('');
+    }
 
-  let lastMi = -1;
-  for (let i = MONTHS.length - 1; i >= 0; i--) {
-    if (COLS.some(c => oursData[yr][i][c])) { lastMi = i; break; }
-  }
-  const mc = document.getElementById('home-month-cards');
-  if (lastMi < 0) {
-    mc.innerHTML = '<div style="color:var(--text3);font-size:12px;grid-column:1/-1;padding:8px 0">まだ入力がありません</div>';
-  } else {
-    const d   = oursData[yr][lastMi];
-    const tot = calculateRowNet(d);
-    mc.innerHTML = `
-      <div class="scard accent"><div class="scard-label">${MONTHS[lastMi]} 合計</div><div class="scard-val">${fmtYen(tot)}</div><div class="scard-sub">Total OURS ${yr}</div></div>
-      <div class="scard"><div class="scard-label">食費</div><div class="scard-val">${fmtYen(parseNum(d.food))}</div><div class="scard-sub">Food</div></div>
-      <div class="scard pink"><div class="scard-label">日用品</div><div class="scard-val">${fmtYen(parseNum(d.misc))}</div><div class="scard-sub">Daily</div></div>`;
-  }
-}
+    // ─── NAV ─────────────────────────────────────────────────────
+    function switchPage(id, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('page-' + id).classList.add('active');
+      btn.classList.add('active');
+      document.querySelector('.main-scroll').scrollTop = 0;
+    }
 
-// ─── NAV ─────────────────────────────────────────────────────
-function switchPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-  document.querySelector('.main-scroll').scrollTop = 0;
-}
+    // Close dropdowns on outside click
+    window.addEventListener('click', e => {
+      if (!e.target.closest('.year-select-btn') && !e.target.closest('.year-dropdown')) {
+        closeAllDropdowns();
+      }
+    });
 
-// ─── INIT ────────────────────────────────────────────────────
-(function init() {
-  loadStorage();
-  if (!years.length) {
-    for (let y = START_YEAR; y <= CURRENT_YEAR; y++) ensureYear(y);
-  }
-  if (!years.includes(activeOursYear))   activeOursYear   = years[years.length - 1];
-  if (!years.includes(activeSettleYear)) activeSettleYear = years[years.length - 1];
-  initOursPage();
-  renderOursYearBar();
-  renderSettleYearBar();
-  loadOursYear(activeOursYear);
-  loadSettleYear(activeSettleYear);
-  updateHome();
-})();
-</script>
+    // ─── SWIPE GESTURES ──────────────────────────────────────────
+    function initSwipeGestures() {
+      const scrollContainer = document.querySelector('.main-scroll');
+      if (!scrollContainer) return;
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchStartTime = 0;
+
+      scrollContainer.addEventListener('touchstart', e => {
+        const target = e.target;
+        if (
+          target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.tagName === 'SELECT' || 
+          target.closest('.year-select-row') || 
+          target.closest('.year-dropdown') || 
+          target.closest('.month-nav') || 
+          target.closest('.modal-overlay') || 
+          target.closest('.toggle-group') || 
+          target.closest('.btn-add-row') ||
+          target.closest('.btn-del-item')
+        ) {
+          touchStartX = 0;
+          return;
+        }
+
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+      }, { passive: true });
+
+      scrollContainer.addEventListener('touchend', e => {
+        if (!touchStartX) return;
+
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+        const duration = Date.now() - touchStartTime;
+
+        touchStartX = 0;
+
+        const thresholdX = 50; 
+        const maxThresholdY = 40; 
+        const maxDuration = 350; 
+
+        if (Math.abs(diffX) > thresholdX && Math.abs(diffY) < maxThresholdY && duration < maxDuration) {
+          const activePage = document.querySelector('.page.active');
+          if (!activePage) return;
+
+          const pageId = activePage.id;
+
+          if (pageId === 'page-ours') {
+            if (diffX > 0) {
+              goToPrevMonth();
+            } else {
+              goToNextMonth();
+            }
+          } else if (pageId === 'page-home' || pageId === 'page-settle') {
+            if (diffX > 0) {
+              goToPrevYear();
+            } else {
+              goToNextYear();
+            }
+          }
+        }
+      }, { passive: true });
+    }
+
+    function goToPrevMonth() {
+      if (activeOursMonth > 0) {
+        animateSwipeTransition('prev', () => {
+          selectOursMonth(activeOursMonth - 1);
+        });
+      } else {
+        const prevYearIndex = years.indexOf(activeYear) - 1;
+        if (prevYearIndex >= 0) {
+          animateSwipeTransition('prev', () => {
+            activeYear = years[prevYearIndex];
+            activeOursMonth = 11;
+            refreshUI();
+          });
+        }
+      }
+    }
+
+    function goToNextMonth() {
+      if (activeOursMonth < 11) {
+        animateSwipeTransition('next', () => {
+          selectOursMonth(activeOursMonth + 1);
+        });
+      } else {
+        const nextYearIndex = years.indexOf(activeYear) + 1;
+        if (nextYearIndex < years.length) {
+          animateSwipeTransition('next', () => {
+            activeYear = years[nextYearIndex];
+            activeOursMonth = 0;
+            refreshUI();
+          });
+        }
+      }
+    }
+
+    function goToPrevYear() {
+      const prevYearIndex = years.indexOf(activeYear) - 1;
+      if (prevYearIndex >= 0) {
+        animateSwipeTransition('prev', () => {
+          activeYear = years[prevYearIndex];
+          refreshUI();
+        });
+      }
+    }
+
+    function goToNextYear() {
+      const nextYearIndex = years.indexOf(activeYear) + 1;
+      if (nextYearIndex < years.length) {
+        animateSwipeTransition('next', () => {
+          activeYear = years[nextYearIndex];
+          refreshUI();
+        });
+      }
+    }
+
+    function animateSwipeTransition(direction, updateFn) {
+      const activePage = document.querySelector('.page.active');
+      if (!activePage) {
+        updateFn();
+        return;
+      }
+
+      let targetEl = activePage;
+      if (activePage.id === 'page-ours') {
+        targetEl = document.querySelector('.ours-month-card');
+      }
+
+      if (!targetEl) {
+        updateFn();
+        return;
+      }
+
+      const outClass = direction === 'next' ? 'swipe-out-left' : 'swipe-out-right';
+      const inClass = direction === 'next' ? 'swipe-in-right' : 'swipe-in-left';
+
+      targetEl.classList.remove('swipe-out-left', 'swipe-out-right', 'swipe-in-left', 'swipe-in-right');
+      targetEl.classList.add(outClass);
+
+      setTimeout(() => {
+        updateFn();
+        targetEl.classList.remove(outClass);
+        targetEl.classList.add(inClass);
+
+        setTimeout(() => {
+          targetEl.classList.remove(inClass);
+        }, 180);
+      }, 180);
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────
+    (function init() {
+      applyLanguage(); // apply persisted language immediately (sign-in screen)
+      loadStorage();
+      if (!years.length) {
+        for (let y = START_YEAR; y <= CURRENT_YEAR; y++) ensureYear(y);
+      }
+      if (!years.includes(activeYear)) activeYear = years[years.length - 1];
+      initOursPage();
+      initSwipeGestures();
+      refreshUI();
+    })();
+  </script>
 </body>
+
 </html>

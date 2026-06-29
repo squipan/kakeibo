@@ -1,6 +1,6 @@
 // 家計簿 Service Worker — v2
 // Deployed at: https://squipan.github.io/kakeibo/
-const CACHE = 'kakebo-v9';
+const CACHE = 'kakebo-v12';
 const BASE  = '/kakeibo/';
 const ASSETS = [
   BASE,
@@ -8,7 +8,7 @@ const ASSETS = [
   BASE + 'manifest.json',
   BASE + 'icon-192.png',
   BASE + 'icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap'
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Noto+Serif+JP:wght@400;700&display=swap'
 ];
 
 self.addEventListener('install', e => {
