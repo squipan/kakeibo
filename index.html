@@ -1117,6 +1117,17 @@
       transition: all 0.3s;
       white-space: nowrap;
       box-shadow: var(--shadow);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
     }
 
     .sync-ok {
@@ -1124,17 +1135,32 @@
       color: #15803d;
       border: 1px solid rgba(34, 197, 94, 0.15);
     }
+    .sync-ok::before {
+      background: #22c55e;
+    }
 
     .sync-pending {
       background: rgba(234, 179, 8, 0.1);
       color: #a16207;
       border: 1px solid rgba(234, 179, 8, 0.2);
     }
+    .sync-pending::before {
+      background: #eab308;
+      animation: syncPulse 1.2s infinite ease-in-out;
+    }
 
     .sync-offline {
       background: rgba(117, 135, 123, 0.1);
       color: var(--text2);
       border: 1px solid rgba(117, 135, 123, 0.2);
+    }
+    .sync-offline::before {
+      background: var(--text3);
+    }
+
+    @keyframes syncPulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1.15); }
     }
 
     .topbar-right {
@@ -1187,6 +1213,59 @@
 
     .lang-btn:active {
       transform: translateY(0);
+    }
+
+    /* BUDGET PROGRESS CARD */
+    .budget-progress-card {
+      background: var(--white);
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .budget-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+    .budget-progress-bar-bg {
+      height: 8px;
+      background: var(--bg2);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    .budget-progress-bar-fill {
+      height: 100%;
+      background: var(--accent1);
+      width: 0%;
+      border-radius: 4px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+    }
+    .budget-progress-bar-fill.over-budget {
+      background: var(--pink);
+    }
+    .budget-percent-badge {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--accent-light);
+      color: var(--accent1);
+      transition: all 0.3s;
+    }
+    .budget-percent-badge.over-budget {
+      background: var(--pink-bg);
+      color: var(--pink-text);
     }
 
 
@@ -2048,7 +2127,7 @@
         <div class="topbar-sub" data-t="logoSub">Household Finance</div>
       </div>
       <div class="topbar-right">
-        <span id="sync-status" class="sync-pill sync-offline">⏳ 接続中</span>
+        <span id="sync-status" class="sync-pill sync-offline">接続中</span>
         <button class="lang-btn lang-toggle-btn" onclick="toggleLanguage()">EN</button>
         <div class="avatars">
           <div class="av av-d" title="Dane">D</div>
@@ -2134,6 +2213,17 @@
             <div class="month-nav-dots" id="ours-month-dots"></div>
           </div>
           <button class="month-nav-arrow" id="month-next-btn" onclick="goToNextMonth()" aria-label="次の月">&#8250;</button>
+        </div>
+
+        <!-- BUDGET PROGRESS CARD -->
+        <div class="budget-progress-card" id="ours-budget-progress-card" style="display:none;">
+          <div class="budget-progress-header">
+            <span id="budget-progress-text">Spent: ¥0 / Contribution: ¥0</span>
+            <span class="budget-percent-badge" id="budget-percent-badge">0%</span>
+          </div>
+          <div class="budget-progress-bar-bg">
+            <div class="budget-progress-bar-fill" id="budget-progress-fill"></div>
+          </div>
         </div>
 
         <!-- MONTH CARD FORM -->
@@ -2620,9 +2710,9 @@
     function updateSyncPill(hasPending, fromCache) {
       const el = document.getElementById('sync-status');
       if (!el) return;
-      if (hasPending) { el.textContent = currentLang === 'jp' ? '⏳ 同期中' : '⏳ Syncing...'; el.className = 'sync-pill sync-pending'; }
-      else if (fromCache) { el.textContent = currentLang === 'jp' ? '📴 オフライン' : '📴 Offline'; el.className = 'sync-pill sync-offline'; }
-      else { el.textContent = currentLang === 'jp' ? '✓ 同期済' : '✓ Synced'; el.className = 'sync-pill sync-ok'; }
+      if (hasPending) { el.textContent = currentLang === 'jp' ? '同期中' : 'Syncing'; el.className = 'sync-pill sync-pending'; }
+      else if (fromCache) { el.textContent = currentLang === 'jp' ? 'オフライン' : 'Offline'; el.className = 'sync-pill sync-offline'; }
+      else { el.textContent = currentLang === 'jp' ? '同期済' : 'Synced'; el.className = 'sync-pill sync-ok'; }
     }
 
     // ─── PWA: INSTALL PROMPT ─────────────────────────────────────
@@ -2962,8 +3052,52 @@
       updateHome();
     }
 
+    function updateBudgetProgressBar(rowData) {
+      const progressCard = document.getElementById('ours-budget-progress-card');
+      if (!progressCard) return;
+
+      const contrib = parseNum(rowData.dane) + parseNum(rowData.shizu);
+      const spent = parseNum(rowData.elec) + parseNum(rowData.water)
+        + parseNum(rowData.net) + parseNum(rowData.food)
+        + parseNum(rowData.misc) + parseNum(rowData.car)
+        + parseNum(rowData.rakuten);
+
+      const hasAnyInput = contrib > 0 || spent > 0;
+      if (!hasAnyInput) {
+        progressCard.style.display = 'none';
+        return;
+      }
+      progressCard.style.display = 'flex';
+
+      const percent = contrib > 0 ? Math.round((spent / contrib) * 100) : 0;
+
+      const fillEl = document.getElementById('budget-progress-fill');
+      const badgeEl = document.getElementById('budget-percent-badge');
+      const textEl = document.getElementById('budget-progress-text');
+
+      if (fillEl && badgeEl && textEl) {
+        fillEl.style.width = Math.min(percent, 100) + '%';
+        badgeEl.textContent = percent + '%';
+
+        if (percent > 100) {
+          fillEl.classList.add('over-budget');
+          badgeEl.classList.add('over-budget');
+        } else {
+          fillEl.classList.remove('over-budget');
+          badgeEl.classList.remove('over-budget');
+        }
+
+        if (currentLang === 'jp') {
+          textEl.innerHTML = `支出: ¥${spent.toLocaleString('ja-JP')} / 拠出: ¥${contrib.toLocaleString('ja-JP')}`;
+        } else {
+          textEl.innerHTML = `Spent: ¥${spent.toLocaleString('ja-JP')} / Contribution: ¥${contrib.toLocaleString('ja-JP')}`;
+        }
+      }
+    }
+
     function updateOursTotals(yr) {
       ensureYear(yr);
+      updateBudgetProgressBar(oursData[yr][activeOursMonth]);
       const colTotals = Object.fromEntries(COLS.map(c => [c, 0]));
 
       const summaryList = document.getElementById('annual-summary-list');
